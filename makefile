@@ -15,7 +15,7 @@ SOURCES=coarsen.c cut_subfind.c cutgadget.c friends2idlist.c get_group_catalogue
 EXECS=$(SOURCES:.c=)
 
 
-all: makefile $(EXECS) $(FEXECS)
+all: makefile $(EXECS)
 
 bin:
 	mkdir bin
