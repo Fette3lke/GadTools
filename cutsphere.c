@@ -36,6 +36,7 @@ int main (int argc, char *argv[])
   fltarr cm;
   double rad;
   int maxpart = 0;
+  int basic_only = 0;
 
   
   i=1;
@@ -78,6 +79,10 @@ int main (int argc, char *argv[])
 	else usepart=atoi(argv[i]);
 	i++;
       }
+      else if (!strcmp(argv[i],"-b")) {
+        basic_only=1;
+	i++;
+      }
       else if (!strcmp(argv[i],"-max")) 
       {
 	i++;
@@ -88,6 +93,13 @@ int main (int argc, char *argv[])
     }
 
   unsigned int numpart_all;
+
+  if (basic_only)
+    {
+      extern int basic;
+      basic = 1;
+    }
+  
 
   if (!(numpart_all=readgadget_part(infile, &head, &part))) 
     {

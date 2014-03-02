@@ -322,9 +322,12 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  (*particle)[pi + i].type=type[i];
 #ifndef NOGAS
 	  (*particle)[pi + i].sph=NULL;
-#ifdef WINDS
+#if defined(WINDS) || defined(METALS)
 	  (*particle)[pi + i].sd=NULL;
 #endif //WINDS
+#ifdef METALS
+	  (*particle)[pi + i].metals=NULL;
+#endif
 	  (*particle)[pi + i].stellarage=0;
 #endif
 	}
@@ -460,50 +463,166 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		}
 	    }
 	  /*********************************************************************************/
-	  if (nstars)
+	  if ((nstars) || (h->npart[5]))
 	    {
 	      float *sa;
-	      sa=(float*) malloc(sizeof(float)*nstars);
+	      sa=(float*) malloc(sizeof(float)*(nstars + h->npart[5]));
 	      SKIP;
-	      if (!fread(&sa[0],sizeof(float),nstars,fp)) {libgaderr=37;return 0;}
+	      if (!fread(&sa[0],sizeof(float),(nstars + h->npart[5]),fp)) {libgaderr=37;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=47;return 0;}
 	      int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
-	      for (i=0; i< (nstars); i++)
+	      for (i=0; i< (nstars + h->npart[5]); i++)
 		{
 		  (*particle)[pi + start + i].stellarage=sa[i];
 		}
 	      free(sa);
 	    }
 	  /*********************************************************************************/
+
+#ifdef METALS
+	  
+	  if (nstars)
+	    {
+	      SKIP;
+	      if ( blocksize == sizeof(int)*nstars )
+		{
+		  stardata *sdtmp = (struct stardata*) malloc (sizeof (struct stardata) * nstars);
+		  int *let;
+		  let=(int*) malloc(sizeof(int)*nstars);
+	      
+		  if (!fread(&let[0],sizeof(int),nstars,fp)) {libgaderr=38;return 0;}
+		  SKIP2;
+		  if (blocksize!=blocksize2) {libgaderr=48;return 0;}
+		  int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
+		  for (i=0; i< (nstars); i++)
+		    {
+		      sdtmp[i].let = let[i];
+
+		    }
+		  free(let);
+
+		  float *initialmass;
+		  initialmass=(float*) malloc(sizeof(float)*nstars);
+		  SKIP;
+		  if (!fread(&initialmass[0],sizeof(float),nstars,fp)) {libgaderr=39;return 0;}
+		  SKIP2;
+		  if (blocksize!=blocksize2) {libgaderr=49;return 0;}
+
+		  for (i=0; i< (nstars); i++)
+		    {
+		      sdtmp[i].initialmass=initialmass[i];
+		      (*particle)[pi + start + i].sd = &(sdtmp[i]);
+		    }
+		  free(initialmass);
+		}
+	      else
+		{
+		  fseek(fp, -sizeof(int), SEEK_CUR);
+		}
+	    }
+
+	  if (((nstars) || (ngas)) && (h->flg_mtl))
+	    {
+	      float *metals;
+	      metals = (float*) malloc(sizeof(float)*12*(nstars+ngas));
+	      SKIP;
+	      if (!fread(&metals[0],sizeof(float),12*(nstars+ngas),fp)) {libgaderr=110;return 0;}
+	      SKIP2;
+	      if (blocksize!=blocksize2) {libgaderr=120;return 0;}
+
+	      for (i=0; i< (ngas); i++)
+		{
+		  (*particle)[pi + i].metals=&(metals[i*12]);
+		}
+
+	      int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
+	      for (i=0; i< (nstars); i++)
+		{
+		  (*particle)[pi + start + i].metals = &(metals[(ngas+i)*12]);
+		}
+	      
+	    }
+
+#endif //METALS
+
+	  /* BH data should be read in here, temporarily skipped */	
+	  if (h->npart[5])
+	    {
+	      SKIP;
+	      while ( blocksize == sizeof(float)*h->npart[5] )
+		{
+		  SKIP;
+		}
+	      fseek(fp, -sizeof(int), SEEK_CUR);
+	    }
+
 #ifdef POTENTIAL
 #ifndef WINDS
-      	  SKIP;
+
+	  SKIP;
 	  if (!feof(fp))
-	    {
+	    {	      	      
 	      pot=(float*) malloc (sizeof(float)* numpart);
 	      if (!fread(&pot[0],sizeof(float),numpart,fp)) {libgaderr=68;return 0;}
 	      SKIP2;
-	      if (blocksize!=blocksize2) {libgaderr=69;return 0;}
-	      fclose(fp);
-	      for (i=0; i< (numpart); i++)
+	      if (blocksize!=blocksize2) 
 		{
-		  (*particle)[pi + i].pot=pot[i];
+		  libgaderr=69;
+		  for (i=0; i< (numpart); i++)
+		    {
+		      (*particle)[pi + i].pot=0;
+		    }
+		  //		  return 0;
 		}
+	      else
+		for (i=0; i< (numpart); i++)
+		  {
+		    (*particle)[pi + i].pot=pot[i];
+		  }
 	      free(pot);
-	    } else 
+	    } 
+	  else 
 	    {
 	      for (i=0; i< (numpart); i++)
 		{
 		  (*particle)[pi + i].pot=0;
 		}
-	      fclose(fp);
 	    }
 #endif //WINDS
-#else
-	  fclose(fp);
 #endif //POTENTIAL
+
+#ifdef METALS
+	  if (ngas)
+	    {
+	      float *temp;
+	      temp = (float*) malloc(sizeof(float)*ngas);
+	      SKIP;
+	      if (blocksize == sizeof(float) * ngas)
+		{
+		  if (!fread(&temp[0],sizeof(float),ngas,fp)) {libgaderr=111;return 0;}
+		  SKIP2;
+		  if (blocksize!=blocksize2) {libgaderr=121;return 0;}
+		  
+		  for (i=0; i< (ngas); i++)
+		    {
+		      (*particle)[pi + i].sph->temp=temp[i];
+		    }
+		}
+	      else
+		{
+		  for (i=0; i< (ngas); i++)
+		    {
+		      (*particle)[pi + i].sph->temp=temperature((*particle)[pi + i]);
+		    }
+		  fseek(fp, -sizeof(int), SEEK_CUR);
+		}
+	      free(temp);	      
+	    }
+	  
+#endif // METALS
 	}
+      fclose(fp);
 #endif
 
       /*********************************************************************************/
@@ -794,21 +913,87 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 
 
       }
-  if (nstars)
+    if ((nstars) || h.npart[5] )
     {
-      float *sa=(float  *)malloc(sizeof(float)*nstars);
+      float *sa=(float  *)malloc(sizeof(float)*(nstars+h.npart[5]));
       int start= h.npart[0] + h.npart[1] + h.npart[2] + h.npart[3];
-      for (i=0; i<nstars; i++)
+      for (i=0; i<nstars+h.npart[5]; i++)
 	  {
 	    sa[i]=part[i + start].stellarage;
 	  }
-      blocksize=nstars*4;
+      blocksize=(nstars+h.npart[5])*4;
       BLOCK
-	fwrite(sa, sizeof(float), nstars, fp);
+	fwrite(sa, sizeof(float), nstars+h.npart[5], fp);
       BLOCK
 	free(sa);
     }
 #endif
+#ifdef METALS
+  if (nstars)
+    {
+      int start= h.npart[0] + h.npart[1] + h.npart[2] + h.npart[3];
+      if (part[start].sd !=NULL)
+	{
+	  int *let=(int  *)malloc(sizeof(int)*nstars);	  
+	  for (i=0; i<nstars; i++)
+	    {
+	      let[i]=part[i + start].sd->let;
+	    }
+	  blocksize=nstars*4;
+	  BLOCK
+	    fwrite(let, sizeof(int), nstars, fp);
+	  BLOCK
+	    free(let);
+	  
+	  float *initialmass=(float  *)malloc(sizeof(float)*nstars);
+	  for (i=0; i<nstars; i++)
+	    {
+	      initialmass[i]=part[i + start].sd->initialmass;
+	    }
+	  blocksize=nstars*4;
+	  BLOCK
+	    fwrite(initialmass, sizeof(float), nstars, fp);
+	  BLOCK
+	    free(initialmass);
+	}
+    }
+  if (((nstars) || (ngas)) && (h.flg_mtl))
+    {
+      float *metals=(float  *)malloc(sizeof(float)*12*(nstars+ngas));
+
+      for (i=0; i<ngas; i++)
+	  {
+	    for (j = 0; j < 12; j++ )
+	      metals[i*12 + j]=part[i].metals[j];
+	  }
+      int start= h.npart[0] + h.npart[1] + h.npart[2] + h.npart[3];
+      for (i=0; i<nstars; i++)
+	  {
+	    for (j = 0; j < 12; j++ )
+	      metals[(i+ngas)*12 + j]=part[i + start].metals[j];
+	  }
+      blocksize=(nstars+ngas)*4*12;
+      BLOCK
+	fwrite(metals, sizeof(float), 12*(ngas+nstars), fp);
+      BLOCK
+	free(metals);
+    }
+#endif //METALS
+
+  /* BH data should be written here, temporarily skipped */	
+  if (h.npart[5])
+    {
+      for ( i = 0; i < 4; i++ )
+	{
+	  blocksize = sizeof(float) * h.npart[5];
+	  float* fdum = (float*) calloc(h.npart[5], sizeof(float));
+	  BLOCK
+	    fwrite(fdum, sizeof(float), h.npart[5], fp);
+	  BLOCK
+	    free(fdum);
+	}
+    }
+
 #ifdef POTENTIAL
 #ifndef WINDS
   blocksize=numpart*4;
@@ -817,6 +1002,22 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
   BLOCK
     free(pot);
 #endif
+#endif
+
+#ifdef METALS
+  if (ngas)
+    {
+      float *temp=(float  *)malloc(sizeof(float)*ngas);
+      for (i=0; i<ngas; i++)
+	  {
+	    temp[i]=part[i].sph->temp;
+	  }
+      blocksize=ngas*4;
+      BLOCK
+	fwrite(temp, sizeof(float), ngas, fp);
+      BLOCK
+	free(temp);
+    }
 #endif
   fclose(fp);
   free(p);
@@ -1817,4 +2018,25 @@ double radvel(fltarr vel, fltarr rad)
   //  double angle = acos(vdotr / (velnorm * radnorm));
   return (vdotr / radnorm);
   
+}
+
+
+struct header cphead(struct header head, gadpart* part, int cnt)
+{
+  struct header res = head;
+  int i;
+  for ( i=0; i<6; i++)
+    {
+      res.npart[i] = 0;
+      res.nall[i] = 0;
+    }
+
+  for ( i=0; i<cnt; i++)
+    {
+      int t = part[i].type;
+      res.npart[t]++;
+      res.nall[t]++;
+    }
+  res.numfiles=1;
+  return res;
 }

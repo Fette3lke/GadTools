@@ -825,7 +825,7 @@ void  findFOF(KdNode * root, fltarr pos, double dist, gadpart *** result, int * 
 	  if ( fnd == NULL )
 	    {
 	      double Dist=distance_nopb(pos, (*result)[i]->pos);
-	      if (Dist > minfac * dist) 
+	      if (Dist >= minfac * dist) 
 		{
 		  findNewGadparts(root, (*result)[i]->pos, dist, result, numpart, size);
 		}

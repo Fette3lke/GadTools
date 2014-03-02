@@ -159,8 +159,8 @@ int buildTree(OctNode *onode, gadpart **part, unsigned int count, fltarr center,
       //      printf("childPointcount0 %d\n", childPointCounts[i][0]);fflush(stdout);
     }
 
-gadpart **newlist[8];
-unsigned int newcount[8];
+  gadpart **newlist[8];
+  unsigned int newcount[8];
 
 #pragma omp parallel for // firstprivate(radius)
   for ( i = 0; i < 8; i++ )
@@ -186,7 +186,7 @@ unsigned int newcount[8];
 
   free(part);
 
-  #pragma omp parallel  for // firstprivate(radius)
+#pragma omp parallel  for // firstprivate(radius)
   for ( i = 0; i < 8; i++ )
   {
     if (childPointCounts[i][0])
@@ -255,7 +255,7 @@ float distPart(gadpart *part, fltarr pos)
   return sqrt(dist);  
 }
 
-int findParticles(OctNode *onode, fltarr pos, float dist, gadpart ***result, unsigned int *numpart, unsigned int *size)
+unsigned long findParticles(OctNode *onode, fltarr pos, float dist, gadpart ***result, unsigned int *numpart, unsigned int *size)
 {
   if ( distOctNode(onode, pos) > dist )
     return 0;  
@@ -307,11 +307,47 @@ OctNode * findLeaf(OctNode *onode, fltarr pos)
       if (pos[2] > node->center[2]) code |= 4; 
       if ( node->child[code] == NULL )
 	{
-	  fprintf(stderr,"OctTree invalid (findLeaf)\n");
-	  exit(1);
+	  return node;
 	}
       node = node->child[code];
     }
   return node;
+}
+
+void rejectNodes(OctNode *onode, int atype ,int rtype, float reject_ratio)
+{
+  int i,j;
+  if (onode->numpart)
+    {
+      float rejects = 0;
+      float accepts = 0;
+      for ( i = 0; i < onode->numpart; i++)
+	{
+	  if ((1<<(onode->part[i]->type)) & atype )
+	    accepts++;
+	  if ((1<<(onode->part[i]->type)) & rtype )
+	    rejects++;
+	}
+      if ((accepts == 0) && (rejects == 0))
+	{
+	    return;
+	}
+      if ( rejects/(accepts+rejects) > reject_ratio )
+	{
+	  onode->numpart = 0;
+	  free(onode->part);
+	}
+      return;
+    }
+
+#pragma omp parallel for // firstprivate(radius)
+  for ( i = 0; i < 8; i++ )
+  {
+    if (onode->child[i] == NULL)
+      continue;
+    rejectNodes(onode->child[i], atype, rtype, reject_ratio);
+  }  
+  
+  return;
 }
 

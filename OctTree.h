@@ -27,6 +27,7 @@ int buildTree (OctNode *onode, gadpart **part, unsigned int count, fltarr center
 int checkOctTree(OctNode *onode);
 float distOctNode(OctNode *onode, fltarr center);
 float distPart(gadpart *part, fltarr pos);
-int findParticles(OctNode *onode, fltarr pos, float dist, gadpart ***result, unsigned int *numpart, unsigned int *size);
+unsigned long findParticles(OctNode *onode, fltarr pos, float dist, gadpart ***result, unsigned int *numpart, unsigned int *size);
 OctNode * findLeaf(OctNode *onode, fltarr pos);
+void rejectNodes(OctNode *onode, int atype, int rtype, float reject_ratio);
 #endif

@@ -39,17 +39,18 @@ const float SOFTENING = 1.0;
 
 void usage()
 {
-  	  fprintf(stderr," Make ID list - reads a list of IDs, finds center of corresponding particles in snapshot, and overwrites ID list with the IDs of all the particles inside trace_factor * R200\n");
-  	  fprintf(stderr,"\t-o  \t<ID list base file name>\n");
-  	  fprintf(stderr,"\t-i  \t<snaphsot file name>\n");
-  	  fprintf(stderr,"\t-tf \t<trace_factor>\n");
-  	  fprintf(stderr,"\t-max\t<max Halo ID>\n");
-          fprintf(stderr,"\t-sd \t<search distance>\n");
-          fprintf(stderr,"\t-md \t<max distance from cm>\n");
-  	  fprintf(stderr,"\t-cd \t<convert distances (factor needed to get to kpc, for calculating the critical density>\n");
-  	  fprintf(stderr,"\t-c  \t<write basic properties to catalogue file>\n");
-  	  fprintf(stderr,"\t-use\t<bitcode particle types to use (default 2¹)>\n\n");
-	  exit(1);
+  fprintf(stderr," Make ID list - reads a list of IDs, finds center of corresponding particles in snapshot, adds particles to list that are inside trace_factor * R200 and overwrites ID list\n");
+  fprintf(stderr,"\t-o  \t<ID list base file name>\n");
+  fprintf(stderr,"\t-i  \t<snaphsot file name>\n");
+  fprintf(stderr,"\t-tf \t<trace_factor>\n");
+  fprintf(stderr,"\t-max\t<max Halo ID>\n");
+  fprintf(stderr,"\t-sd \t<search distance>\n");
+  fprintf(stderr,"\t-md \t<max distance from cm>\n");
+  fprintf(stderr,"\t-cd \t<convert distances (factor needed to get to kpc, for calculating the critical density>\n");
+  fprintf(stderr,"\t-c  \t<write basic properties to catalogue file>\n");
+  fprintf(stderr,"\t-pos\t<write position file (to use with MUSIC)>\n");
+  fprintf(stderr,"\t-use\t<bitcode particle types to use (default 2¹)>\n\n");
+  exit(1);
 }
 
 
@@ -74,6 +75,7 @@ int main (int argc, char *argv[])
   int num_halos = 0;
   int write_catalogue = 0;
   int write_gad_file = 0;
+  int outpos = 0;
   double soft = SOFTENING;
 
   strcpy(outbase,"idlist");
@@ -110,6 +112,11 @@ int main (int argc, char *argv[])
         {
           i++;
           write_gad_file = 1;
+        } 
+      else if (!strcmp(argv[i],"-pos"))
+        {
+          i++;
+          outpos = 1;
         } 
       else if (!strcmp(argv[i],"-v"))
 	{
@@ -226,6 +233,8 @@ int main (int argc, char *argv[])
     {
       char idlistname[128];
       sprintf(idlistname, "%s_%d", outbase, haloid);
+      char posfilename[128];
+      sprintf(posfilename, "%s_positions_%d", outbase, haloid);
       FILE *fp = fopen(idlistname, "rb");
       if (fp == NULL) 
         {
@@ -237,13 +246,14 @@ int main (int argc, char *argv[])
       int numids=0;
       fltarr center;
       IDtype *idlist;
+      fltarr *pos = NULL;
       float maxdist = 0;
       fread(&numids, sizeof(int), 1, fp);
       fread(center, sizeof(float), 3, fp);
       if (verbose)
       {
-	       printf("haloid %d | numids %d | center %g %g %g\n", haloid, numids, center[0], center[1], center[2]);
-         fflush(stdout);
+	printf("haloid %d | numids %d | center %g %g %g\n", haloid, numids, center[0], center[1], center[2]);
+	fflush(stdout);
       }
       if (numids)
 	{
@@ -251,6 +261,8 @@ int main (int argc, char *argv[])
 	  idlist = calloc(numids, sizeof(IDtype));
 	  fread(&idlist[0], sizeof(IDtype), numids, fp);
 	  qsort(idlist, numids, sizeof(IDtype), cmp_IDtype);
+	  if (outpos)
+	    pos = (fltarr*) calloc(numids, sizeof(fltarr));
 	}
       if (maxdist == 0) maxdist = def_maxdist;
 
@@ -293,6 +305,11 @@ int main (int argc, char *argv[])
 	      fnd = bsearch( &id_key, idlist, numids, sizeof(IDtype), cmp_IDtype);
 	      if (fnd != NULL)
 		{
+		  if (outpos)
+		    {
+		      for ( j = 0; j < 3; j++)
+			pos[numfnd][j] = part_pnt[i]->pos[j] / head.boxsize;
+		    }
 		  wpart[numfnd++].part = *part_pnt[i];
 		}
 	      if (numfnd >= numids) break;
@@ -362,6 +379,9 @@ int main (int argc, char *argv[])
       double dist = 0;
       i = 0;
       int num_new_ids = 0;
+      fltarr *newpos = NULL;
+      if (outpos)	
+	newpos = (fltarr*) calloc (npart, sizeof(IDtype));	
       IDtype *newids = (IDtype*) calloc (npart, sizeof(IDtype));
       while (dist < (trace_factor * rvir))
 	{
@@ -371,6 +391,11 @@ int main (int argc, char *argv[])
 	  fnd = bsearch( &id_key, idlist, numids, sizeof(IDtype), cmp_IDtype);
 	  if (fnd == NULL)
 	    {
+	      if (outpos)
+		{
+		  for (j = 0; j < 3; j++)
+		    newpos[num_new_ids][j] = wpart[i].part.pos[j] / head.boxsize;
+		}
 	      newids[num_new_ids++] = id_key;
 	    }
 	  i++;
@@ -392,10 +417,30 @@ int main (int argc, char *argv[])
       if (num_new_ids)
 	fwrite(&newids[0], sizeof(IDtype), num_new_ids, fp);
       fclose(fp);
+
+      if (outpos)
+	{
+	  fp = fopen(posfilename, "w");
+	  fwrite(&totnumids, sizeof(int), 1, fp);
+	  if (numids)
+	    fwrite(&pos[0], sizeof(fltarr), numids, fp);      
+	  if (num_new_ids)
+	    fwrite(&newpos[0], sizeof(fltarr), num_new_ids, fp);
+	  fclose(fp);
+	}
+
       if (numids)
-	free(idlist);
+	{
+	  free(idlist);
+	  if (outpos)
+	    free(pos);
+	}
       if (npart)
-	free(newids);
+	{
+	  free(newids);
+	  if (outpos)
+	    free(newpos);
+	}
     }
 
   if (write_catalogue)

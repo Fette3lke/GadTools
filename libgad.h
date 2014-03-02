@@ -82,16 +82,24 @@ typedef struct sphdata
   float tmax;
   float n_spawn;
 #endif //WINDS
+#ifdef METALS
+  float temp;
+#endif
 } sphdata;
 
-#ifdef WINDS
+#if defined(WINDS) || defined(METALS)
 typedef struct stardata
 {
+#ifdef WINDS
   float metals[4];
   float tmax;
   float n_spawn;
+#else
+  int let;
+  float initialmass;
+#endif
 } stardata;
-#endif //WINDS
+#endif //WINDS || METALS
 
 typedef struct gadpart
 {
@@ -110,10 +118,13 @@ typedef struct gadpart
   float pot;
 #endif
 
-#ifdef WINDS
+#if defined(WINDS) || defined(METALS)
   stardata *sd;
 #endif //WINDS
 
+#ifdef METALS
+  float* metals;
+#endif
 } gadpart;
 
 typedef struct gadpart_dist
@@ -168,6 +179,7 @@ double a2z(double a);
 double z2a(double z);
 double angle(fltarr a, fltarr b);
 double radvel(fltarr vel, fltarr rad);
+struct header cphead(struct header head, gadpart* part, int cnt);
 
 #ifdef GSL
 void rotatepart(gadpart *part, int numpart, const gsl_matrix *rotmat);

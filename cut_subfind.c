@@ -49,12 +49,14 @@ float StarMassThreshold = 0.0;
 float TotalMassThreshold = 0.0;
 int use_cm = 16;
 int use_ind = 0;
+int sfid = -1;
 
 void usage()
 {
   fprintf(stderr,"Cut SubFind Groups out of a GADGET Snapshot v0.2\n");
   fprintf(stderr,"-f <snapshot filename>\n");
   fprintf(stderr,"-s set threshold in stellar mass in code units\n");
+  fprintf(stderr,"-sfid <id of SubFind structure to cut>\n");
   fprintf(stderr,"-m set threshold in total mass in code units\n");
   fprintf(stderr,"-use bitcode for particle types used for centering\n");
   fprintf(stderr,"-ind <use array index instead of particle ID>\n");
@@ -106,6 +108,12 @@ int main(int argc, char **argv)
 	      {		
 		i++;
 		StarMassThreshold = atof(argv[i]);
+		i++;
+	      }
+	    else if (!strcmp(argv[i],"-sfid"))
+	      {		
+		i++;
+		sfid = atoi(argv[i]);
 		i++;
 	      }
 	    else if (!strcmp(argv[i],"-m"))
@@ -172,6 +180,7 @@ int load_snapshot(char* fname, int num)
 
   for (j=0; j<TotNsubgroups; j++) 
     {
+      if ((sfid >= 0) && (j != sfid)) continue;
       if ((StarMassThreshold) && (SubhaloStarsMass[j] < StarMassThreshold )) continue;
       if ((TotalMassThreshold) && (SubhaloMass[j] < TotalMassThreshold )) continue;
       gadpart *wpart=(gadpart*) malloc (sizeof(gadpart) * SubhaloLen[j]);
