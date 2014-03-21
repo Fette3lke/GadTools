@@ -260,7 +260,7 @@ int main (int argc, char *argv[])
 	      idpart.id = idlist[i];
 	      long int size = &part[numpart_all] - start;
 
-	      fnd = bsearch( &idpart, part, size, sizeof(gadpart), cmp_id);
+	      fnd = bsearch( &idpart, start, size, sizeof(gadpart), cmp_id);
 	      if (fnd != NULL)
 		{
 		  start = fnd;
