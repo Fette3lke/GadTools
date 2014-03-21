@@ -10,7 +10,7 @@ gcc -fopenmp -lm  -lgsl -lgslcblas -lgad -L ./ mk_id_list.c -o ~/bin/mk_id_list 
 #include <time.h>
 #include <string.h>
 #include "libgad.h"
-#include "OctTree.h"
+#include "ompfuncs.h"
 
 #define USE 63
 
@@ -190,7 +190,12 @@ int main (int argc, char *argv[])
       printf("error reading file %s\nError Code %d\n",infile, libgaderr);
       exit(1);
     }
-  qsort(part, numpart_all, sizeof(gadpart), cmp_id);
+  if (verbose)
+  {
+    printf("sorting snapshot\n");
+    fflush(stdout);
+  }
+  myqsort(part, numpart_all, sizeof(gadpart), cmp_id);
   /*********************************************************************
 
       Program code goes here
