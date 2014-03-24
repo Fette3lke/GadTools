@@ -996,11 +996,14 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 
 #ifdef POTENTIAL
 #ifndef WINDS
-  blocksize=numpart*4;
-  BLOCK
-    fwrite(pot, sizeof(float), numpart, fp);
-  BLOCK
-    free(pot);
+  if (!basic)
+    {
+      blocksize=numpart*4;
+      BLOCK
+	fwrite(pot, sizeof(float), numpart, fp);
+      BLOCK
+	free(pot);
+    }
 #endif
 #endif
 
