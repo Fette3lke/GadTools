@@ -232,7 +232,8 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       if (blocksize == 8)
 	{
 	  snapformat = 2;
-	  fseek(fp, 16, SEEK_CUR);
+	  fseek(fp, 12, SEEK_CUR);
+	  SKIP;
 	}
       //      if (blocksize == 65536) switch_endianess = 1;
       fread(h,sizeof(struct header),1,fp);            
@@ -240,7 +241,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       ngas=h->npart[0];
       nstars=h->npart[4];
       SKIP2;
-      if (blocksize!=blocksize2) return 0;
+      if (blocksize!=blocksize2) {libgaderr=256; return 0;}
       numpart = 0;
       b=0;
       for (i=0; i<6; i++) 
