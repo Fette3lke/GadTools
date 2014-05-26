@@ -1,4 +1,6 @@
 #define SKIP fread(&blocksize,sizeof(int),1,fp);
+#define SKIPFORMAT2 if (snapformat == 2) fseek(fp, 16, SEEK_CUR);	\
+  fread(&blocksize,sizeof(int),1,fp);
 #define SKIP2 fread(&blocksize2,sizeof(int),1,fp);
 #define BLOCK fwrite(&blocksize,sizeof(int),1,fp);
 #include <stdio.h>
@@ -201,6 +203,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
   fltarr *pos, *vel;
   float *mass, *mass_dum;
   sphdata *sphtmp;
+  int snapformat = 1;
 #ifdef POTENTIAL
   float *pot;
 #endif
@@ -226,6 +229,11 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  return 0;
 	}
       SKIP;
+      if (blocksize == 8)
+	{
+	  snapformat = 2;
+	  fseek(fp, 16, SEEK_CUR);
+	}
       //      if (blocksize == 65536) switch_endianess = 1;
       fread(h,sizeof(struct header),1,fp);            
       numfiles = h->numfiles;
@@ -247,7 +255,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  *particle= (struct gadpart *) malloc(sizeof (struct gadpart)*numpart_all);	  
 	  if (*particle==NULL) {libgaderr=99; return 0;}
 	}
-      SKIP;                                                
+      SKIPFORMAT2;                                                
       if (!fread(&pos[0],sizeof(fltarr),numpart,fp)) {libgaderr=10;return 0;}
       SKIP2;
       if (blocksize!=blocksize2) {libgaderr=20;return 0;}
@@ -259,7 +267,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 #ifndef NOVEL
       vel=(fltarr *)malloc(sizeof(fltarr)*numpart); 
-      SKIP;
+      SKIPFORMAT2;
       if (!fread(&vel[0],sizeof(fltarr),numpart,fp)) {libgaderr=11;return 0;}
       SKIP2;
       if (blocksize!=blocksize2) {libgaderr=21;return 0;}
@@ -269,7 +277,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	}
       free(vel);
 #else
-      SKIP;
+      SKIPFORMAT2;
       fseek(fp,blocksize,SEEK_CUR);
       SKIP2;
       if (blocksize!=blocksize2) {libgaderr=21;return 0;}
@@ -279,12 +287,12 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       if (b) mass_dum=(float  *)malloc(sizeof(float)*b);
 #ifdef LONGIDS
       id  =  (long    *)malloc(sizeof(long)*numpart);
-      SKIP;
+      SKIPFORMAT2;
       if (!fread(&id[0],sizeof(long),numpart,fp)) {libgaderr=12;return 0;}
       SKIP2;
 #else
       id  =  (int    *)malloc(sizeof(int)*numpart);
-      SKIP;
+      SKIPFORMAT2;
       if (!fread(&id[0],sizeof(int),numpart,fp)) {libgaderr=12;return 0;}
       SKIP2;
 #endif // LONGIDS
@@ -293,7 +301,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       if (blocksize!=blocksize2) {libgaderr=22;return 0;}
       if (b)
 	{
-	  SKIP;
+	  SKIPFORMAT2;
 	  if (!fread(&mass_dum[0],sizeof(float),b,fp)) {libgaderr=13;return 0;}
 	  SKIP2;
 	  if (blocksize!=blocksize2) {libgaderr=23;return 0;}
@@ -334,7 +342,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 
 #ifdef WINDS
-      SKIP;
+      SKIPFORMAT2;
       pot=(float*) malloc (sizeof(float)* numpart);
       if (!fread(&pot[0],sizeof(float),numpart,fp)) {libgaderr=38;return 0;}
       SKIP2;
@@ -367,7 +375,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		    {
 		      continue;
 		    } 
-		  SKIP;
+		  SKIPFORMAT2;
 		  if (!fread(&sph[i][0],sizeof(float),ngas,fp)) {libgaderr=30+i;return 0;}
 		  SKIP2;
 		  if (blocksize!=blocksize2) {libgaderr=40+i;return 0;}
@@ -390,7 +398,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  
 	      //Read delaytime
 	      float *sphdum = (float  *)malloc(sizeof(float)*ngas);
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (!fread(&sphdum[0],sizeof(float),ngas,fp)) {libgaderr=36;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=46;return 0;}
@@ -399,7 +407,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 	      //Read Metals
 	      float *metals= (float *) malloc( 4 * sizeof(float) * (ngas+nstars));
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (!fread(&metals[0],4 * sizeof(float),(ngas + nstars),fp)) {libgaderr=37;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=47;return 0;}
@@ -421,7 +429,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 	      //Read tmax
 	      float *gsdum = (float  *)malloc(sizeof(float)*(ngas+nstars));
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (!fread(&gsdum[0],sizeof(float),(ngas+nstars),fp)) {libgaderr=38;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=48;return 0;}				  
@@ -435,7 +443,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		}
 	  
 	      //Read n_spawn
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (!fread(&gsdum[0],sizeof(float),(ngas+nstars),fp)) {libgaderr=39;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=49;return 0;}				  
@@ -467,7 +475,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	    {
 	      float *sa;
 	      sa=(float*) malloc(sizeof(float)*(nstars + h->npart[5]));
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (!fread(&sa[0],sizeof(float),(nstars + h->npart[5]),fp)) {libgaderr=37;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=47;return 0;}
@@ -484,7 +492,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  
 	  if (nstars)
 	    {
-	      SKIP;
+	      SKIPFORMAT2;
 	      if ( blocksize == sizeof(int)*nstars )
 		{
 		  stardata *sdtmp = (struct stardata*) malloc (sizeof (struct stardata) * nstars);
@@ -504,7 +512,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 		  float *initialmass;
 		  initialmass=(float*) malloc(sizeof(float)*nstars);
-		  SKIP;
+		  SKIPFORMAT2;
 		  if (!fread(&initialmass[0],sizeof(float),nstars,fp)) {libgaderr=39;return 0;}
 		  SKIP2;
 		  if (blocksize!=blocksize2) {libgaderr=49;return 0;}
@@ -526,7 +534,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	    {
 	      float *metals;
 	      metals = (float*) malloc(sizeof(float)*12*(nstars+ngas));
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (!fread(&metals[0],sizeof(float),12*(nstars+ngas),fp)) {libgaderr=110;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=120;return 0;}
@@ -549,10 +557,10 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  /* BH data should be read in here, temporarily skipped */	
 	  if (h->npart[5])
 	    {
-	      SKIP;
+	      SKIPFORMAT2;
 	      while ( blocksize == sizeof(float)*h->npart[5] )
 		{
-		  SKIP;
+		  SKIPFORMAT2;
 		}
 	      fseek(fp, -sizeof(int), SEEK_CUR);
 	    }
@@ -560,7 +568,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 #ifdef POTENTIAL
 #ifndef WINDS
 
-	  SKIP;
+	  SKIPFORMAT2;
 	  if (!feof(fp))
 	    {	      	      
 	      pot=(float*) malloc (sizeof(float)* numpart);
@@ -597,7 +605,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	    {
 	      float *temp;
 	      temp = (float*) malloc(sizeof(float)*ngas);
-	      SKIP;
+	      SKIPFORMAT2;
 	      if (blocksize == sizeof(float) * ngas)
 		{
 		  if (!fread(&temp[0],sizeof(float),ngas,fp)) {libgaderr=111;return 0;}
