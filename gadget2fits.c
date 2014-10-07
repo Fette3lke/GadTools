@@ -19,23 +19,24 @@ gcc -fopenmp -lgad-stan -lgsl -lgslcblas gadget2fits.c -o ~/bin/gadget2fits -I$H
 
 void usage()
 {
-  	  fprintf(stderr," Create FITS file for gas surface density v0.01\n");
-  	  fprintf(stderr," -i   <input file name>\n");
-  	  fprintf(stderr," -t   <temperature threshold>\n");
-  	  fprintf(stderr," -use <bitcode of particles to be used for inertia tensor>\n");
-  	  fprintf(stderr," -r   <max-distance of particles to be considered for inertia tensor>\n");
-  	  fprintf(stderr," -vb  <number of velocity bins>\n");
-  	  fprintf(stderr," -vm  <sets range of velocity bins [-vm, vm]>\n");
-  	  fprintf(stderr," -rf  <rotate file> (sets viewport)\n");
-  	  fprintf(stderr," -srf <save rotate file>\n");
-  	  fprintf(stderr," -s   <smoothing length for stellar particles>\n\n");
-  	  fprintf(stderr," choose two:\n");
-  	  fprintf(stderr,"    -b <boxsize>\n");
-  	  fprintf(stderr,"    -g <gridsize>\n");
-  	  fprintf(stderr,"    -p <pixelsize>\n\n");
-  	  fprintf(stderr,"    -nophys   <do not convert pixelsize to physical units (instead use code units)>\n\n");
-  	  fprintf(stderr," \n\n");
-	  exit(1);
+          fprintf(stderr," Create FITS file for gas surface density v0.01\n");
+          fprintf(stderr," -i   <input file name>\n");
+          fprintf(stderr," -t   <temperature threshold>\n");
+          fprintf(stderr," -tc  <use temperature cut described in Hirschmann et al 2012>\n");
+          fprintf(stderr," -use <bitcode of particles to be used for inertia tensor>\n");
+          fprintf(stderr," -r   <max-distance of particles to be considered for inertia tensor>\n");
+          fprintf(stderr," -vb  <number of velocity bins>\n");
+          fprintf(stderr," -vm  <sets range of velocity bins [-vm, vm]>\n");
+          fprintf(stderr," -rf  <rotate file> (sets viewport)\n");
+          fprintf(stderr," -srf <save rotate file>\n");
+          fprintf(stderr," -s   <smoothing length for stellar particles>\n\n");
+          fprintf(stderr," choose two:\n");
+          fprintf(stderr,"    -b <boxsize>\n");
+          fprintf(stderr,"    -g <gridsize>\n");
+          fprintf(stderr,"    -p <pixelsize>\n\n");
+          fprintf(stderr,"    -nophys   <do not convert pixelsize to physical units (instead use code units)>\n\n");
+          fprintf(stderr," \n\n");
+          exit(1);
 }
 
 #ifndef _OPENMP
@@ -66,6 +67,7 @@ int main (int argc, char *argv[])
   int convert_phys = 1;
   int save_rotation = 0;
   int load_rotation = 0;
+  int diag_temp_cut = 0;
 
   double *dens;
   double **dens_tmp;
@@ -96,117 +98,122 @@ int main (int argc, char *argv[])
   while (i<argc)
     {
       if (!strcmp(argv[i],"-i"))
-	{
-	  i++;
-	  strcpy(infile,argv[i]);
-	  i++;
-	} 
+        {
+          i++;
+          strcpy(infile,argv[i]);
+          i++;
+        } 
       else if (*argv[i]!='-')
-	{
-	  strcpy(infile,argv[i]);
-	  i++;
-	}
+        {
+          strcpy(infile,argv[i]);
+          i++;
+        }
       else if (!strcmp(argv[i],"-o"))
-	{
-	  i++;
-	  strcpy(fitsfilename,argv[i]);
-	  i++;
-	} 
+        {
+          i++;
+          strcpy(fitsfilename,argv[i]);
+          i++;
+        } 
       else if (!strcmp(argv[i],"-rf"))
-	{
-	  i++;
-	  strcpy(rotfile,argv[i]);
-	  load_rotation=1;
-	  i++;
-	} 
+        {
+          i++;
+          strcpy(rotfile,argv[i]);
+          load_rotation=1;
+          i++;
+        } 
       else if (!strcmp(argv[i],"-srf"))
-	{
-	  i++;
-	  strcpy(rotfile,argv[i]);
-	  save_rotation=1;
-	  i++;
-	} 
+        {
+          i++;
+          strcpy(rotfile,argv[i]);
+          save_rotation=1;
+          i++;
+        } 
       else if (!strcmp(argv[i],"-use")) {
-	i++;
-	if (!strcmp(argv[i],"all")) usepart=63;
-	else usepart=atoi(argv[i]);
-	i++;
+        i++;
+        if (!strcmp(argv[i],"all")) usepart=63;
+        else usepart=atoi(argv[i]);
+        i++;
       }
       else if (!strcmp(argv[i],"-g")) 
-	{
-	  i++;
-	  gridsize=atoi(argv[i]);
-	  i++;
-	} 
+        {
+          i++;
+          gridsize=atoi(argv[i]);
+          i++;
+        } 
       else if (!strcmp(argv[i],"-np")) 
-	{
-	  i++;
-	  nproj=atoi(argv[i]);
-	  i++;
-	} 
+        {
+          i++;
+          nproj=atoi(argv[i]);
+          i++;
+        } 
       else if (!strcmp(argv[i],"-vb")) 
-	{
-	  i++;
-	  velbins=atoi(argv[i]);
-	  i++;
-	} 
+        {
+          i++;
+          velbins=atoi(argv[i]);
+          i++;
+        } 
       else if (!strcmp(argv[i],"-vm")) 
-	{
-	  i++;
-	  velmax=atof(argv[i]);
-	  i++;
-	} 
+        {
+          i++;
+          velmax=atof(argv[i]);
+          i++;
+        } 
       else if (!strcmp(argv[i],"-b")) 
-	{
-	  i++;
-	  boxsize=atof(argv[i]);
-	  i++;
-	}
+        {
+          i++;
+          boxsize=atof(argv[i]);
+          i++;
+        }
       else if (!strcmp(argv[i],"-s")) 
-	{
-	  i++;
-	  stellar_hsml=atof(argv[i]);
-	  i++;
-	}
+        {
+          i++;
+          stellar_hsml=atof(argv[i]);
+          i++;
+        }
       else if (!strcmp(argv[i],"-r")) 
-	{
-	  i++;
-	  rotate_dist=atof(argv[i]);
-	  i++;
-	}
+        {
+          i++;
+          rotate_dist=atof(argv[i]);
+          i++;
+        }
       else if (!strcmp(argv[i],"-p")) 
-	{
-	  i++;
-	  binsize=atof(argv[i]);
-	  i++;
-	}
+        {
+          i++;
+          binsize=atof(argv[i]);
+          i++;
+        }
       else if (!strcmp(argv[i],"-nophys")) 
-	{
-	  i++;
-	  convert_phys = 0;
-	}
+        {
+          i++;
+          convert_phys = 0;
+        }
+      else if (!strcmp(argv[i],"-tc")) 
+        {
+          i++;
+          diag_temp_cut = 1;
+        }
       else if (!strcmp(argv[i],"-t")) 
-	{
-	  i++;
-	  tempthreshold=atof(argv[i]);
-	  i++;
-	}
+        {
+          i++;
+          tempthreshold=atof(argv[i]);
+          i++;
+        }
       else if (!strcmp(argv[i],"-v")) 
-	{
-	  i++;
-	  verbose=1;
-	}
+        {
+          i++;
+          verbose=1;
+        }
       else if (!strcmp(argv[i],"-c")) 
-	{
-	  i++;
-	  center[0]=atof(argv[i]);
-	  i++;
-	  center[1]=atof(argv[i]);
-	  i++;
-	  center[2]=atof(argv[i]);
-	  i++;
-	} else {
-	usage();
+        {
+          i++;
+          center[0]=atof(argv[i]);
+          i++;
+          center[1]=atof(argv[i]);
+          i++;
+          center[2]=atof(argv[i]);
+          i++;
+        } else {
+        usage();
       }
     }
 
@@ -272,10 +279,10 @@ int main (int argc, char *argv[])
   if ( ( center[0] != 0 ) || ( center[1] != 0 ) || ( center[2] != 0 ) )
     {
       for ( n = 0; n < numpart_all; n++)
-	{
-	  for ( j = 0; j < 3; j++)
-	    part[n].pos[j] -= center[j];
-	}
+        {
+          for ( j = 0; j < 3; j++)
+            part[n].pos[j] -= center[j];
+        }
     }
   if (verbose) printf("rotate system...\n");
   double ratios[2] = {0,0};
@@ -295,11 +302,11 @@ int main (int argc, char *argv[])
       rotategalaxy(part, numpart_all, rotate_dist, usepart, &ratios[0], &rotation);
 
       if (save_rotation)
-	{
-	  FILE *matrixf=fopen(rotfile,"w");
-	  gsl_matrix_fwrite (matrixf, rotation);
-	  fclose(matrixf);
-	}
+        {
+          FILE *matrixf=fopen(rotfile,"w");
+          gsl_matrix_fwrite (matrixf, rotation);
+          fclose(matrixf);
+        }
     }
   gsl_matrix_free(rotation);
   
@@ -332,34 +339,34 @@ int main (int argc, char *argv[])
     {
 
       for ( i=0; i<g3; i++)
-	{
-	  dens[i] = 0;
-	  sdens[i] = 0;
-	}
+        {
+          dens[i] = 0;
+          sdens[i] = 0;
+        }
 
 #pragma omp parallel private(i)
       {
-	int thread= omp_get_thread_num();
-	for ( i=0; i<g3; i++)
-	  {
-	    dens_tmp[thread][i] = 0;
-	    sdens_tmp[thread][i] = 0;
-	  }
+        int thread= omp_get_thread_num();
+        for ( i=0; i<g3; i++)
+          {
+            dens_tmp[thread][i] = 0;
+            sdens_tmp[thread][i] = 0;
+          }
       }
 
       if (iproj)
-	{
-	  if (iproj == ((nproj-1)/2)+1)
-	    {
-	      xrotate(-total_proj_angle, part, numpart_all);
-	      total_proj_angle = 0;
-	    }
-	  if (iproj <= (nproj-1)/2)
-	    xrotate(proj_angle, part, numpart_all);
-	  else
-	    yrotate(proj_angle, part, numpart_all);
-	  total_proj_angle += proj_angle;
-	}
+        {
+          if (iproj == ((nproj-1)/2)+1)
+            {
+              xrotate(-total_proj_angle, part, numpart_all);
+              total_proj_angle = 0;
+            }
+          if (iproj <= (nproj-1)/2)
+            xrotate(proj_angle, part, numpart_all);
+          else
+            yrotate(proj_angle, part, numpart_all);
+          total_proj_angle += proj_angle;
+        }
       if (verbose) printf("Projection Angle: %g\n", total_proj_angle);
 //      char testname[256];
 //      sprintf(testname,"test%d.gad", iproj);
@@ -367,117 +374,124 @@ int main (int argc, char *argv[])
       
 #pragma omp parallel for private(i, j, k)
       for ( n = 0; n < (head.npart[0]+head.npart[4]); n++ )
-	{
-	  long index;
-	  double h;
-	  int star = 0;
-	  if (n < head.npart[0]) 
-	    {
-	      index = n;
-	      if (temperature(part[index]) > tempthreshold) continue;
-	      h = part[index].sph->hsml;
-	    }
-	  else
-	    {
-	      index = n + head.npart[1] + head.npart[2] + head.npart[3];
-	      h = stellar_hsml;
-	      star = 1;
-	    }
-	  double x = part[index].pos[0];
-	  double y = part[index].pos[1];
-	  double z = part[index].pos[2];
-	  double vz =part[index].vel[2];
-	  double pmass = part[index].mass;
+        {
+          long index;
+          double h;
+          int star = 0;
+          if (n < head.npart[0]) 
+            {
+              index = n;
+              if (diag_temp_cut) 
+                {
+                  double ltemp = log10(temperature(part[index]));
+                  double lrho  = log10( (part[index].sph->rho) * SQR(0.72) * 1.e10);
+                  if (ltemp > ( 0.3 * lrho + 3.2 ) ) continue;
+                }
+              else
+                if (temperature(part[index]) > tempthreshold) continue;
+              h = part[index].sph->hsml;
+            }
+          else
+            {
+              index = n + head.npart[1] + head.npart[2] + head.npart[3];
+              h = stellar_hsml;
+              star = 1;
+            }
+          double x = part[index].pos[0];
+          double y = part[index].pos[1];
+          double z = part[index].pos[2];
+          double vz =part[index].vel[2];
+          double pmass = part[index].mass;
 
 
-	  if ( ((x+2*h) < -boxhalf) || ((x-2*h) > boxhalf) ) continue;
-	  if ( ((y+2*h) < -boxhalf) || ((y-2*h) > boxhalf) ) continue;
-	  if ( ((z+2*h) < -boxhalf) || ((z-2*h) > boxhalf) ) continue;
+          if ( ((x+2*h) < -boxhalf) || ((x-2*h) > boxhalf) ) continue;
+          if ( ((y+2*h) < -boxhalf) || ((y-2*h) > boxhalf) ) continue;
+          if ( ((z+2*h) < -boxhalf) || ((z-2*h) > boxhalf) ) continue;
      
-	  int ix = floor( (x + boxhalf) * binsizeinv );
-	  int iy = floor( (y + boxhalf) * binsizeinv );
-	  int iz = floor( (z + boxhalf) * binsizeinv );
-	  int inc = 2.0 * h * binsizeinv;
+          int ix = floor( (x + boxhalf) * binsizeinv );
+          int iy = floor( (y + boxhalf) * binsizeinv );
+          int iz = floor( (z + boxhalf) * binsizeinv );
+          int inc = 2.0 * h * binsizeinv;
       
-	  double gx = ( ix / binsizeinv ) - boxhalf + cellhalf;
-	  double gy = ( iy / binsizeinv ) - boxhalf + cellhalf;
-	  double gz = ( iz / binsizeinv ) - boxhalf + cellhalf;
+          double gx = ( ix / binsizeinv ) - boxhalf + cellhalf;
+          double gy = ( iy / binsizeinv ) - boxhalf + cellhalf;
+          double gz = ( iz / binsizeinv ) - boxhalf + cellhalf;
 
-	  double dist2 = ( SQR( x - gx ) + SQR( y - gy ) + SQR( z - gz ) ) / SQR( h );
-	  int thread = omp_get_thread_num();
-	  if ( dist2 < 4.0 )
-	    {
-	      for ( i = (ix - inc); i <= (ix+inc); i++ )
-		{
-		  if ((i<0) || (i>= gridsize)) continue;
-		  for ( j = (iy - inc); j <= (iy+inc); j++ )
-		    {
-		      if ((j<0) || (j>= gridsize)) continue;
-		      for ( k = (iz - inc); k <= (iz+inc); k++ )
-			{
-			  if ((k<0) || (k>= gridsize)) continue;
-			  gx = ( i / binsizeinv ) - boxhalf + cellhalf;
-			  gy = ( j / binsizeinv ) - boxhalf + cellhalf;
-			  gz = ( k / binsizeinv ) - boxhalf + cellhalf;
-			  double val = 0.;
-			  dist2 = ( SQR( x - gx ) + SQR( y - gy ) + SQR( z - gz ) ) / SQR( h );
-			  if ( dist2 < 4.0 )
-			    {
-			      double weight = 0;
-			      double dist = sqrt( dist2 );
-			      if ( dist < 1.0 )
-				{
-				  weight = 1.0 -1.5 * dist2 + 0.75 * dist2 * dist;
-				}
-			      else
-				{
-				  double dif2 = 2.0 - dist;
-				  weight = 0.25 * dif2 * dif2 * dif2;
-				}
-			      val = weight / (h*h*h) / M_PI * pmass;
-			    }
-			  if (val > 0)
-			    {
-			      long vind = floor((vz + velmax) / velbinsize);
-//			      if (vind < 0) vind = 0;
-//			      else if (vind >= velbins) vind = velbins - 1;
-			      if (vind < 0) continue;
-			      else if (vind >= velbins) continue;
+          double dist2 = ( SQR( x - gx ) + SQR( y - gy ) + SQR( z - gz ) ) / SQR( h );
+          int thread = omp_get_thread_num();
+          if ( dist2 < 4.0 )
+            {
+              for ( i = (ix - inc); i <= (ix+inc); i++ )
+                {
+                  if ((i<0) || (i>= gridsize)) continue;
+                  for ( j = (iy - inc); j <= (iy+inc); j++ )
+                    {
+                      if ((j<0) || (j>= gridsize)) continue;
+                      for ( k = (iz - inc); k <= (iz+inc); k++ )
+                        {
+                          if ((k<0) || (k>= gridsize)) continue;
+                          gx = ( i / binsizeinv ) - boxhalf + cellhalf;
+                          gy = ( j / binsizeinv ) - boxhalf + cellhalf;
+                          gz = ( k / binsizeinv ) - boxhalf + cellhalf;
+                          double val = 0.;
+                          dist2 = ( SQR( x - gx ) + SQR( y - gy ) + SQR( z - gz ) ) / SQR( h );
+                          if ( dist2 < 4.0 )
+                            {
+                              double weight = 0;
+                              double dist = sqrt( dist2 );
+                              if ( dist < 1.0 )
+                                {
+                                  weight = 1.0 -1.5 * dist2 + 0.75 * dist2 * dist;
+                                }
+                              else
+                                {
+                                  double dif2 = 2.0 - dist;
+                                  weight = 0.25 * dif2 * dif2 * dif2;
+                                }
+                              val = weight / (h*h*h) / M_PI * pmass;
+                            }
+                          if (val > 0)
+                            {
+                              long vind = floor((vz + velmax) / velbinsize);
+//                            if (vind < 0) vind = 0;
+//                            else if (vind >= velbins) vind = velbins - 1;
+                              if (vind < 0) continue;
+                              else if (vind >= velbins) continue;
 
-			      long ind = i + g * j + g2 * vind;
-			      {			
-				if (star)
-				  sdens_tmp[thread][ind] += val * convert;
-				else
-				  dens_tmp[thread][ind] += val * convert;
-			      }
-			    }
-			}
-		    }
-		}
+                              long ind = i + g * j + g2 * vind;
+                              {                 
+                                if (star)
+                                  sdens_tmp[thread][ind] += val * convert;
+                                else
+                                  dens_tmp[thread][ind] += val * convert;
+                              }
+                            }
+                        }
+                    }
+                }
 
-	    }
-	  else
-	    {
-	      if ( (ix<0) || (ix >= gridsize) ) continue;
-	      if ( (iy<0) || (iy >= gridsize) ) continue;
-	      if ( (iz<0) || (iz >= gridsize) ) continue;
+            }
+          else
+            {
+              if ( (ix<0) || (ix >= gridsize) ) continue;
+              if ( (iy<0) || (iy >= gridsize) ) continue;
+              if ( (iz<0) || (iz >= gridsize) ) continue;
 
-	      long vind = floor((vz + velmax) / velbinsize);
-//	      if (vind < 0) vind = 0;
-//	      else if (vind >= velbins) vind = velbins - 1;
-	      if (vind < 0) continue;
-	      else if (vind >= velbins) continue;
+              long vind = floor((vz + velmax) / velbinsize);
+//            if (vind < 0) vind = 0;
+//            else if (vind >= velbins) vind = velbins - 1;
+              if (vind < 0) continue;
+              else if (vind >= velbins) continue;
 
-	      long ind = i + g * j + g2 * vind;
-	      {
-		if (star)
-		  sdens_tmp[thread][ind] += pmass/cellvol * convert;
-		else
-		  dens_tmp[thread][ind] += pmass/cellvol * convert;
-	      }
-	    }
-	}
+              long ind = i + g * j + g2 * vind;
+              {
+                if (star)
+                  sdens_tmp[thread][ind] += pmass/cellvol * convert;
+                else
+                  dens_tmp[thread][ind] += pmass/cellvol * convert;
+              }
+            }
+        }
 
 
       long fpixel = 1;
@@ -489,13 +503,13 @@ int main (int argc, char *argv[])
       double dum = 0;
       double aexpn = head.time;
       for ( ii = 0; ii < nelements; ii++)
-	{
-	  for ( i = 0; i < numthreads; i++ ) 
-	    {
-	      dens[ii] += dens_tmp[i][ii];
-	      sdens[ii] += sdens_tmp[i][ii];
-	    }
-	}
+        {
+          for ( i = 0; i < numthreads; i++ ) 
+            {
+              dens[ii] += dens_tmp[i][ii];
+              sdens[ii] += sdens_tmp[i][ii];
+            }
+        }
 
       fits_create_img(fptr, DOUBLE_IMG, naxis, npixels, &status );
       fits_update_key(fptr, TDOUBLE, "TYPE", &dum , "Cold Gas Distribution", &status);
