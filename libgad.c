@@ -182,6 +182,10 @@ int convertunits(struct header *head, struct gadpart *part, double convert_mass,
 	{
 	  for ( j = 0; j < 3; j++)
 	    part[i].pos[j] *= convert_distance;
+	  if (part[i].type == 0)
+	    {
+	      part[i].sph->hsml *= convert_distance;
+	    }
 	}
     }
   if (convert_mass != 1.0)
@@ -1619,6 +1623,9 @@ void findcenter(gadpart *part, int cnt, double maxdist, int use)
 	  tmpcm[j]/=masstot;
 	  cm[j]=tmpcm[j];
 	}
+#ifdef DEBUG
+      printf("findcenter: %f %f %f | %f\n", cm[0], cm[1], cm[2], maxdist);
+#endif
       maxdist= (maxdist > extend) ? extend : maxdist;
       maxdist*=0.9;
       count=idum;
