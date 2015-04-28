@@ -1,6 +1,7 @@
 CC = gcc
 OPT= -O2 -lm -std=c99 -g -fopenmp
 #OPT+= -DLONGIDS
+#OPT+= -DMETALS
 OPTIONS = $(OPT)
 GSL_LIB = $(GSL_LIBDIR)
 GSL_INCL =$(GSL_INCDIR)
