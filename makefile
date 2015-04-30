@@ -22,10 +22,10 @@ bin:
 	mkdir bin
 
 %.o: %.c $(DEPS)
-	$(CC) $(OPTIONS) -c -o $@ $<
+	$(CC) $(OPTIONS) -I$(GSL_INCDIR) -c -o $@ $<
 
 $(EXECS): $(OBJS) bin 
-	$(CC) $(OPTIONS) -I$(GSL_INCDIR) -L$(GSL_INCDIR) $(OBJS) $@.c -lgsl -lgslcblas -lm -o bin/$@
+	$(CC) $(OPTIONS) -I$(GSL_INCDIR) -L$(GSL_LIBDIR) $(OBJS) $@.c -lgsl -lgslcblas -lm -o bin/$@
 
 clean:
 	rm -f $(OBJS) $(EXEC) bin/*
