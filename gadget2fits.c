@@ -324,7 +324,7 @@ int main (int argc, char *argv[])
   const double cellvol = 8.0 * cellhalf * cellhalf * cellhalf;
   const double cellarea = 4.0 * cellhalf * cellhalf;
   const double binsizeinv = gridsize / boxsize;
-  const starind = head.npart[0] + head.npart[1] + head.npart[2] + head.npart[3];
+  const int starind = head.npart[0] + head.npart[1] + head.npart[2] + head.npart[3];
   double velbinsize = 2*velmax / velbins;
   const double convert = 10 * SQR(head.hubparam) * binsize * 1000 / SQR(head.time); //convert from 10^10Msun*h^2/kpc^3 comoving to Msun/pc^2 physical
   double total_proj_angle = 0;
@@ -332,7 +332,7 @@ int main (int argc, char *argv[])
   int status = 0;
   fits_create_file(&fptr, fitsfilename, &status);
 
-  if (verbose) printf("binnning %d gas particles\n", head.npart[0], gridsize);
+  if (verbose) printf("binnning %d gas particles | gridsize %d\n", head.npart[0], gridsize);
   if (verbose) printf("start binning...\n");
 
   for (iproj = 0; iproj < nproj; iproj++)
@@ -448,6 +448,7 @@ int main (int argc, char *argv[])
                                   double dif2 = 2.0 - dist;
                                   weight = 0.25 * dif2 * dif2 * dif2;
                                 }
+                                //val = weight / (h*h*h) / M_PI / norm * pmass / cellvol;
                               val = weight / (h*h*h) / M_PI * pmass;
                             }
                           if (val > 0)
