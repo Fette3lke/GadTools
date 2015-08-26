@@ -99,6 +99,14 @@ int cmp_int (const void *first, const void *second)
   else return 0;
 }
 
+void write_block_head(FILE* fp, char* text, int nextblock)
+{
+  int blocksize = 8;
+  BLOCK;
+  fwrite(text, sizeof(char), 4, fp);
+  fwrite(&nextblock, sizeof(int), 1, fp);
+  BLOCK;  
+}
 
 
 unsigned int readgadget(char *filename, struct header *h, fltarr **p, fltarr **v, int **n, float **m)
@@ -775,6 +783,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
       return 0;
     }
   blocksize=256;
+  //if (h)
   BLOCK
     fwrite(&h, sizeof(struct header),1,fp);
   BLOCK

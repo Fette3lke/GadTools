@@ -42,6 +42,7 @@ int main  (int argc, char *argv[])
   double mdens,masstot;
   int j=0,k=0,domass=0,verbose=0,check=0, test=0, unsplit=0, massarray=0, addgas=0, kill_massarray=0;
   int forcewrite=0;
+  int format = 1;
  
   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   //filenames are ignored if given as command line parameters in the same order
@@ -100,25 +101,40 @@ int main  (int argc, char *argv[])
       i=0;
       //      for (i=1; i<=5; i++)
       //{
-	  while(fread(&blocksize,sizeof(int),1,fp))
+      while(fread(&blocksize,sizeof(int),1,fp))
+	{
+	  if (check) 
 	    {
-	      if (check) printf("Blocksize %d: %ld\n",i ,blocksize);
+	      if (blocksize!=8)
+		printf("Blocksize %d: %ld\n",i ,blocksize);
+	      else
+		{
+		  char blockhead[32];
+		  int nextblock;
+		  fread(blockhead, sizeof(char), 4, fp);
+		  fread(&nextblock,sizeof(int),  1, fp);
+		  printf("Block: %s, nextblock: %d\n", blockhead, nextblock);
+		  fread(&blocksize,sizeof(int),1,fp);
+		  fread(&blocksize,sizeof(int),1,fp);
+		}
+	    }
+	  
 	  if ((test) && (i==2))
 	    {
 	      dum=0;
 	      while (fread(&fdum,sizeof(float),1,fp))
 		{
-	       if ((fdum<0)||(fdum>72000))
-		 {
-		   printf("position %u hex %8.X uint %10.u float %f\n", ftell(fp) ,fdum ,fdum, fdum);
-		   //		   printf("position %u\n", ftell(fp));
-		 }
-	       
+		  if ((fdum<0)||(fdum>72000))
+		    {
+		      printf("position %u hex %8.X uint %10.u float %f\n", ftell(fp) ,fdum ,fdum, fdum);
+		      //		   printf("position %u\n", ftell(fp));
+		    }
+		  
 		}
-
-	       //	       for (j=31; j>=0; j--) printf("%d", ((1<<j)&blocksize)>>j);
-	       //	       printf("\n%u\n", ftell(fp));
-	       exit(0);
+	      
+	      //	       for (j=31; j>=0; j--) printf("%d", ((1<<j)&blocksize)>>j);
+	      //	       printf("\n%u\n", ftell(fp));
+	      exit(0);
 	    }
 	  fseek(fp,(blocksize),SEEK_CUR);
 	  //printf("%u\n", ftell(fp));
@@ -127,7 +143,7 @@ int main  (int argc, char *argv[])
 	  size+=blocksize+8;
 	  i++;
 	  if (blocksize==0) break;
-	    }
+	}
 	  //}
       rewind(fp);
       printf("Size : %ld\n",size);
@@ -136,6 +152,12 @@ int main  (int argc, char *argv[])
   if (blocks!=7) unsplit=0;
 
   fread(&blocksize,sizeof(int),1,fp);
+  if (blocksize==8) 
+    {
+      format = 2;
+      fseek(fp, 12, SEEK_CUR);
+      fread(&blocksize,sizeof(int),1,fp);
+    }
   if (blocksize==256) printf("Headersize OK\n"); 
   else printf("Bad Headersize %d\n",blocksize);
   fread(&head,sizeof(struct header),1,fp);                        //read header of evolved gadget file
