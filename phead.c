@@ -113,7 +113,7 @@ int main  (int argc, char *argv[])
 		  int nextblock;
 		  fread(blockhead, sizeof(char), 4, fp);
 		  fread(&nextblock,sizeof(int),  1, fp);
-		  printf("Block: %s, nextblock: %d\n", blockhead, nextblock);
+		  printf("Block: %.4s, nextblock: %d\n", blockhead, nextblock);
 		  fread(&blocksize,sizeof(int),1,fp);
 		  fread(&blocksize,sizeof(int),1,fp);
 		}
