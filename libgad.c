@@ -101,6 +101,9 @@ int cmp_int (const void *first, const void *second)
 
 void write_block_head(FILE* fp, char* text, int nextblock)
 {
+#ifdef SNAP_FORMAT_1
+  return;
+#endif
   int blocksize = 8;
   BLOCK;
   fwrite(text, sizeof(char), 4, fp);
@@ -783,40 +786,46 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
       return 0;
     }
   blocksize=256;
-  //if (h)
+  write_block_head(fp, "HEAD", blocksize+8);
   BLOCK
     fwrite(&h, sizeof(struct header),1,fp);
   BLOCK
 
   blocksize=numpart*12;
+  write_block_head(fp, "POS ", blocksize+8);
   BLOCK
     fwrite(&p[0], sizeof(fltarr), numpart, fp);
   BLOCK
 
   blocksize=numpart*12;
+  write_block_head(fp, "VEL ", blocksize+8);
   BLOCK
     fwrite(&v[0], sizeof(fltarr), numpart, fp);
   BLOCK
 
 #ifdef LONGIDS
   blocksize=numpart*sizeof(long);
+  write_block_head(fp, "ID  ", blocksize+8);
   BLOCK
     fwrite(&n[0], sizeof(long), numpart, fp);
   BLOCK
 #else
   blocksize=numpart*4;
+  write_block_head(fp, "ID  ", blocksize+8);
   BLOCK
     fwrite(&n[0], sizeof(int), numpart, fp);
   BLOCK
 #endif // LONGIDS
 
   blocksize=numpart*4;
+  write_block_head(fp, "MASS", blocksize+8);
   BLOCK
     fwrite(&m[0], sizeof(float), numpart, fp);
   BLOCK
 
 #ifdef WINDS
   blocksize=numpart*4;
+  write_block_head(fp, "POT ", blocksize+8);
   BLOCK
     fwrite(pot, sizeof(float), numpart, fp);
   BLOCK
@@ -829,6 +838,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	dum=0;
 	blocksize=ngas*4;
 	float *sph[6];
+	char sph_block_head[32];
 	for (i=0; i<6; i++)
 	  {
 	    sph[i]=(float  *)malloc(sizeof(float)*ngas);
@@ -848,6 +858,28 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	      {
 		continue;
 	      }
+	    switch (i)
+	      {
+	      case 0 :
+		sprintf(sph_block_head, "U   ");
+		break;
+	      case 1 :
+		sprintf(sph_block_head, "RHO ");
+		break;
+	      case 2 :
+		sprintf(sph_block_head, "NE  ");
+		break;
+	      case 3 :
+		sprintf(sph_block_head, "NH  ");
+		break;
+	      case 4 :
+		sprintf(sph_block_head, "HSML");
+		break;
+	      case 5 :
+		sprintf(sph_block_head, "SFR ");
+		break;
+	      }
+	    write_block_head(fp, sph_block_head, blocksize+8);
 	    BLOCK
 	      fwrite(&sph[i][0], sizeof(float), ngas, fp);
 	    BLOCK
@@ -862,6 +894,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	    sphdum[i] = part[i].sph->dtime;
 	  }
 	blocksize=ngas*4;
+	write_block_head(fp, "DT  ", blocksize+8);
 	BLOCK
 	  fwrite(&sphdum[0], sizeof(float), ngas, fp);
 	BLOCK
@@ -893,6 +926,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	  }
 
 	blocksize=(ngas+nstars) * sizeof(float) * 4;
+	write_block_head(fp, "Z   ", blocksize+8);
 	BLOCK
 	  fwrite(&metals[0], 4 * sizeof(float), (ngas+nstars), fp);
 	BLOCK
@@ -912,6 +946,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	  }
 
 	blocksize= (ngas + nstars) * sizeof(float);
+	write_block_head(fp, "TMAX", blocksize+8);
 	BLOCK
 	  fwrite(&gsdum[0], sizeof(float), (ngas+nstars), fp);
 	BLOCK
@@ -926,6 +961,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	    gsdum[ i ] = part[stars_start + i -ngas].sd->n_spawn;
 	  }
 	blocksize= (ngas + nstars) * sizeof(float);
+	write_block_head(fp, "NSPW", blocksize+8);
 	BLOCK
 	  fwrite(&gsdum[0], sizeof(float), (ngas+nstars), fp);
 	BLOCK
@@ -944,6 +980,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	    sa[i]=part[i + start].stellarage;
 	  }
       blocksize=(nstars+h.npart[5])*4;
+      write_block_head(fp, "AGE ", blocksize+8);
       BLOCK
 	fwrite(sa, sizeof(float), nstars+h.npart[5], fp);
       BLOCK
@@ -962,6 +999,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	      let[i]=part[i + start].sd->let;
 	    }
 	  blocksize=nstars*4;
+	  write_block_head(fp, "LET ", blocksize+8);
 	  BLOCK
 	    fwrite(let, sizeof(int), nstars, fp);
 	  BLOCK
@@ -973,6 +1011,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	      initialmass[i]=part[i + start].sd->initialmass;
 	    }
 	  blocksize=nstars*4;
+	  write_block_head(fp, "INIM", blocksize+8);
 	  BLOCK
 	    fwrite(initialmass, sizeof(float), nstars, fp);
 	  BLOCK
@@ -995,6 +1034,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	      metals[(i+ngas)*12 + j]=part[i + start].metals[j];
 	  }
       blocksize=(nstars+ngas)*4*12;
+      write_block_head(fp, "Z   ", blocksize+8);
       BLOCK
 	fwrite(metals, sizeof(float), 12*(ngas+nstars), fp);
       BLOCK
@@ -1005,10 +1045,13 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
   /* BH data should be written here, temporarily skipped */
   if (h.npart[5])
     {
+      char bh_head[32];
       for ( i = 0; i < 4; i++ )
 	{
 	  blocksize = sizeof(float) * h.npart[5];
 	  float* fdum = (float*) calloc(h.npart[5], sizeof(float));
+	  sprintf(bh_head, "BH%d ", i);
+	  write_block_head(fp, bh_head, blocksize+8);
 	  BLOCK
 	    fwrite(fdum, sizeof(float), h.npart[5], fp);
 	  BLOCK
@@ -1021,6 +1064,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
   if (!basic)
     {
       blocksize=numpart*4;
+      write_block_head(fp, "POT ", blocksize+8);
       BLOCK
 	fwrite(pot, sizeof(float), numpart, fp);
       BLOCK
@@ -1038,6 +1082,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	    temp[i]=part[i].sph->temp;
 	  }
       blocksize=ngas*4;
+      write_block_head(fp, "CSTE", blocksize+8);
       BLOCK
 	fwrite(temp, sizeof(float), ngas, fp);
       BLOCK

@@ -12,7 +12,7 @@ CFLAGS = $(OPTIONS)
 DEPS= libgad.h
 OBJS = libgad.o lmmin.o lm_eval.o KdTree.o ompfuncs.o OctTree.o
 
-SOURCES=mergerhist.c searchcenter.c coarsen.c cut_subfind.c cutgadget.c friends2idlist.c get_group_catalogue.c getboundvol.c id2ascii.c pos2ascii.c id2pos.c join_gadfiles.c mk_id_list.c nfw.c phead.c trace.c trhalo.c cutsphere.c assignuniqueids.c
+SOURCES=mergerhist.c searchcenter.c coarsen.c cut_subfind.c cutgadget.c friends2idlist.c get_group_catalogue.c getboundvol.c id2ascii.c pos2ascii.c id2pos.c join_gadfiles.c mk_id_list.c nfw.c phead.c trace.c trhalo.c cutsphere.c assignuniqueids.c getpart.c
 EXECS=$(SOURCES:.c=)
 
 
