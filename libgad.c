@@ -92,8 +92,8 @@ int cmp_dist (const void *first, const void *second)
 
 int cmp_int (const void *first, const void *second)
 {
-  int *a= (int *) first; 
-  int *b= (int *) second; 
+  int *a= (int *) first;
+  int *b= (int *) second;
   if (*a>*b) return 1;
   else if (*a<*b) return -1;
   else return 0;
@@ -105,7 +105,7 @@ void write_block_head(FILE* fp, char* text, int nextblock)
   BLOCK;
   fwrite(text, sizeof(char), 4, fp);
   fwrite(&nextblock, sizeof(int), 1, fp);
-  BLOCK;  
+  BLOCK;
 }
 
 
@@ -120,16 +120,16 @@ unsigned int readgadget(char *filename, struct header *h, fltarr **p, fltarr **v
   fp=fopen(filename,"r");
   if (fp==NULL) return 0;
   SKIP;
-  fread(h,sizeof(struct header),1,fp);            
+  fread(h,sizeof(struct header),1,fp);
   SKIP2;
   if (blocksize!=blocksize2) return 0;
   for (i=0; i<6; i++) {numpart+=h->npart[i]; if ((h->npart[i]!=0) && (h->massarr[i]==0)) b+=h->npart[i];}
-  pos=(fltarr *)malloc(sizeof(fltarr)*numpart); 
-  vel=(fltarr *)malloc(sizeof(fltarr)*numpart); 
-  mass=(float *)malloc(sizeof(float)*numpart); 
+  pos=(fltarr *)malloc(sizeof(fltarr)*numpart);
+  vel=(fltarr *)malloc(sizeof(fltarr)*numpart);
+  mass=(float *)malloc(sizeof(float)*numpart);
   if (b) mass_dum=(float  *)malloc(sizeof(float)*b);
   id=  (int    *)malloc(sizeof(int)*numpart);
-  SKIP;                                                
+  SKIP;
    if (!fread(&pos[0],sizeof(fltarr),numpart,fp)) return 0;
   SKIP2;
   if (blocksize!=blocksize2) return 0;
@@ -153,7 +153,7 @@ unsigned int readgadget(char *filename, struct header *h, fltarr **p, fltarr **v
   *v=vel;
   *n=id;
   j=0;
-  for (i=0; i< numpart; i++) 
+  for (i=0; i< numpart; i++)
    {
      dum=0;
      for (l=0; l<6; l++)
@@ -163,7 +163,7 @@ unsigned int readgadget(char *filename, struct header *h, fltarr **p, fltarr **v
        }
      if (h->massarr[l]!=0) mass[i]=h->massarr[l];
      else mass[i]=mass_dum[j++];
-   } 
+   }
   *m=mass;
   for (i=0; i<6; i++) {check+=h->npart[i];}
   if (check==numpart) return numpart; else return 0;
@@ -178,7 +178,7 @@ int convertunits(struct header *head, struct gadpart *part, double convert_mass,
   unsigned int i;
   int j;
   unsigned int numpart = 0;
-  for ( i = 0; i < 6; i++) 
+  for ( i = 0; i < 6; i++)
     {
       numpart += head->nall[i];
       head->massarr[i] *= convert_mass;
@@ -248,7 +248,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  SKIP;
 	}
       //      if (blocksize == 65536) switch_endianess = 1;
-      fread(h,sizeof(struct header),1,fp);            
+      fread(h,sizeof(struct header),1,fp);
       numfiles = h->numfiles;
       ngas=h->npart[0];
       nstars=h->npart[4];
@@ -256,19 +256,19 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       if (blocksize!=blocksize2) {libgaderr=256; return 0;}
       numpart = 0;
       b=0;
-      for (i=0; i<6; i++) 
+      for (i=0; i<6; i++)
 	{
-	  numpart+=h->npart[i]; 
+	  numpart+=h->npart[i];
 	  if (fnr==0) numpart_all += h->nall[i];
 	  if ((h->npart[i]!=0) && (h->massarr[i]==0)) b+=h->npart[i];
 	}
-      pos=(fltarr *)malloc(sizeof(fltarr)*numpart); 
+      pos=(fltarr *)malloc(sizeof(fltarr)*numpart);
       if (fnr==0)
 	{
-	  *particle= (struct gadpart *) malloc(sizeof (struct gadpart)*numpart_all);	  
+	  *particle= (struct gadpart *) malloc(sizeof (struct gadpart)*numpart_all);
 	  if (*particle==NULL) {libgaderr=99; return 0;}
 	}
-      SKIPFORMAT2;                                                
+      SKIPFORMAT2;
       if (!fread(&pos[0],sizeof(fltarr),numpart,fp)) {libgaderr=10;return 0;}
       SKIP2;
       if (blocksize!=blocksize2) {libgaderr=20;return 0;}
@@ -279,7 +279,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       free(pos);
 
 #ifndef NOVEL
-      vel=(fltarr *)malloc(sizeof(fltarr)*numpart); 
+      vel=(fltarr *)malloc(sizeof(fltarr)*numpart);
       SKIPFORMAT2;
       if (!fread(&vel[0],sizeof(fltarr),numpart,fp)) {libgaderr=11;return 0;}
       SKIP2;
@@ -296,7 +296,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       if (blocksize!=blocksize2) {libgaderr=21;return 0;}
 #endif //NOVEL
 
-      mass=(float *)malloc(sizeof(float)*numpart); 
+      mass=(float *)malloc(sizeof(float)*numpart);
       if (b) mass_dum=(float  *)malloc(sizeof(float)*b);
 #ifdef LONGIDS
       id  =  (long    *)malloc(sizeof(long)*numpart);
@@ -323,7 +323,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       //  part->vel=vel;
       //  part->id=id;
       j=0;
-      for (i=0; i< numpart; i++) 
+      for (i=0; i< numpart; i++)
 	{
 	  dum=0;
 	  for (l=0; l<6; l++)
@@ -334,12 +334,12 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  if (h->massarr[l]!=0) mass[i]=h->massarr[l];
 	  else mass[i]=mass_dum[j++];
 	  type[i]=l;
-	} 
+	}
 
       for (i=0; i<numpart; i++)
 	{
 	  (*particle)[pi + i].id  =id[i];
-	  (*particle)[pi + i].mass=mass[i];      
+	  (*particle)[pi + i].mass=mass[i];
 	  (*particle)[pi + i].type=type[i];
 #ifndef NOGAS
 	  (*particle)[pi + i].sph=NULL;
@@ -370,7 +370,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 #endif //WINDS
 
       /*********************************************************************************/
-      // Read SPH Properties  
+      // Read SPH Properties
 #ifndef NOGAS
       if (!basic)
 	{
@@ -384,10 +384,10 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		}
 	      for (i=0; i<6; i++)
 		{
-		  if ( (i==5) && (!(h->flg_sfr)) ) 
+		  if ( (i==5) && (!(h->flg_sfr)) )
 		    {
 		      continue;
-		    } 
+		    }
 		  SKIPFORMAT2;
 		  if (!fread(&sph[i][0],sizeof(float),ngas,fp)) {libgaderr=30+i;return 0;}
 		  SKIP2;
@@ -408,7 +408,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 #ifdef WINDS
 
 	      stardata *sdtmp = (struct stardata*) malloc (sizeof (struct stardata) * nstars);
-	  
+
 	      //Read delaytime
 	      float *sphdum = (float  *)malloc(sizeof(float)*ngas);
 	      SKIPFORMAT2;
@@ -445,24 +445,24 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	      SKIPFORMAT2;
 	      if (!fread(&gsdum[0],sizeof(float),(ngas+nstars),fp)) {libgaderr=38;return 0;}
 	      SKIP2;
-	      if (blocksize!=blocksize2) {libgaderr=48;return 0;}				  
+	      if (blocksize!=blocksize2) {libgaderr=48;return 0;}
 	      for (i=0; i< ngas; i++)
 		{
-		  sphtmp[i].tmax = gsdum[ i ];	     
+		  sphtmp[i].tmax = gsdum[ i ];
 		}
 	      for (i=ngas; i< (ngas+nstars); i++)
 		{
 		  sdtmp[i-ngas].tmax = gsdum[ i ];
 		}
-	  
+
 	      //Read n_spawn
 	      SKIPFORMAT2;
 	      if (!fread(&gsdum[0],sizeof(float),(ngas+nstars),fp)) {libgaderr=39;return 0;}
 	      SKIP2;
-	      if (blocksize!=blocksize2) {libgaderr=49;return 0;}				  
+	      if (blocksize!=blocksize2) {libgaderr=49;return 0;}
 	      for (i=0; i< ngas; i++)
 		{
-		  sphtmp[i].n_spawn = gsdum[ i ];	     
+		  sphtmp[i].n_spawn = gsdum[ i ];
 		}
 	      for (i=ngas; i< (ngas+nstars); i++)
 		{
@@ -470,7 +470,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		}
 	      free(gsdum);
 
-	      int stars_start = h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
+	      int stars_start = h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3];
 	      for (i=stars_start; i< (stars_start+nstars); i++)
 		{
 		  (*particle)[pi + i].sd=&(sdtmp[i-stars_start]);
@@ -492,7 +492,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	      if (!fread(&sa[0],sizeof(float),(nstars + h->npart[5]),fp)) {libgaderr=37;return 0;}
 	      SKIP2;
 	      if (blocksize!=blocksize2) {libgaderr=47;return 0;}
-	      int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
+	      int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3];
 	      for (i=0; i< (nstars + h->npart[5]); i++)
 		{
 		  (*particle)[pi + start + i].stellarage=sa[i];
@@ -502,7 +502,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 	  /*********************************************************************************/
 
 #ifdef METALS
-	  
+
 	  if (nstars)
 	    {
 	      SKIPFORMAT2;
@@ -511,11 +511,11 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		  stardata *sdtmp = (struct stardata*) malloc (sizeof (struct stardata) * nstars);
 		  int *let;
 		  let=(int*) malloc(sizeof(int)*nstars);
-	      
+
 		  if (!fread(&let[0],sizeof(int),nstars,fp)) {libgaderr=38;return 0;}
 		  SKIP2;
 		  if (blocksize!=blocksize2) {libgaderr=48;return 0;}
-		  int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
+		  int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3];
 		  for (i=0; i< (nstars); i++)
 		    {
 		      sdtmp[i].let = let[i];
@@ -557,17 +557,17 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		  (*particle)[pi + i].metals=&(metals[i*12]);
 		}
 
-	      int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3]; 
+	      int start=h->npart[0] + h->npart[1] + h->npart[2] + h->npart[3];
 	      for (i=0; i< (nstars); i++)
 		{
 		  (*particle)[pi + start + i].metals = &(metals[(ngas+i)*12]);
 		}
-	      
+
 	    }
 
 #endif //METALS
 
-	  /* BH data should be read in here, temporarily skipped */	
+	  /* BH data should be read in here, temporarily skipped */
 	  if (h->npart[5])
 	    {
 	      SKIPFORMAT2;
@@ -583,11 +583,11 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 	  SKIPFORMAT2;
 	  if (!feof(fp))
-	    {	      	      
+	    {
 	      pot=(float*) malloc (sizeof(float)* numpart);
 	      if (!fread(&pot[0],sizeof(float),numpart,fp)) {libgaderr=68;return 0;}
 	      SKIP2;
-	      if (blocksize!=blocksize2) 
+	      if (blocksize!=blocksize2)
 		{
 		  libgaderr=69;
 		  for (i=0; i< (numpart); i++)
@@ -602,8 +602,8 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		    (*particle)[pi + i].pot=pot[i];
 		  }
 	      free(pot);
-	    } 
-	  else 
+	    }
+	  else
 	    {
 	      for (i=0; i< (numpart); i++)
 		{
@@ -624,7 +624,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		  if (!fread(&temp[0],sizeof(float),ngas,fp)) {libgaderr=111;return 0;}
 		  SKIP2;
 		  if (blocksize!=blocksize2) {libgaderr=121;return 0;}
-		  
+
 		  for (i=0; i< (ngas); i++)
 		    {
 		      (*particle)[pi + i].sph->temp=temp[i];
@@ -638,9 +638,9 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 		    }
 		  fseek(fp, -sizeof(int), SEEK_CUR);
 		}
-	      free(temp);	      
+	      free(temp);
 	    }
-	  
+
 #endif // METALS
 	}
       fclose(fp);
@@ -654,7 +654,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
       pi += numpart;
     }
 
-  for (i=0; i<6; i++) 
+  for (i=0; i<6; i++)
     {
       check+=h->nall[i];
       h->npart[i] = h->nall[i];
@@ -664,7 +664,7 @@ unsigned int readgadget_part(char *basefilename, struct header *h, struct gadpar
 
 #ifdef LONGIDS
 unsigned int writegadget(char *filename, struct header h, fltarr *p, fltarr *v, long *n, float *m)
-#else 
+#else
 unsigned int writegadget(char *filename, struct header h, fltarr *p, fltarr *v, int *n, float *m)
 #endif
 {
@@ -682,7 +682,7 @@ unsigned int writegadget(char *filename, struct header h, fltarr *p, fltarr *v, 
   BLOCK
     fwrite(&h, sizeof(struct header),1,fp);
   BLOCK
-    
+
   blocksize=numpart*12;
   BLOCK
     fwrite(&p[0], sizeof(fltarr), numpart, fp);
@@ -698,7 +698,7 @@ unsigned int writegadget(char *filename, struct header h, fltarr *p, fltarr *v, 
   BLOCK
     fwrite(&n[0], sizeof(long), numpart, fp);
   BLOCK
-#else  
+#else
   blocksize=numpart*4;
   BLOCK
     fwrite(&n[0], sizeof(int), numpart, fp);
@@ -777,7 +777,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 #endif
   }
   fp=fopen(filename,"w");
-  if (fp==NULL) 
+  if (fp==NULL)
     {
       libgaderr=1;
       return 0;
@@ -787,7 +787,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
   BLOCK
     fwrite(&h, sizeof(struct header),1,fp);
   BLOCK
-  
+
   blocksize=numpart*12;
   BLOCK
     fwrite(&p[0], sizeof(fltarr), numpart, fp);
@@ -797,7 +797,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
   BLOCK
     fwrite(&v[0], sizeof(fltarr), numpart, fp);
   BLOCK
-  
+
 #ifdef LONGIDS
   blocksize=numpart*sizeof(long);
   BLOCK
@@ -844,10 +844,10 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	  }
 	for (i=0; i<6; i++)
 	  {
-	    if ( (i==5) && (!(h.flg_sfr)) ) 
+	    if ( (i==5) && (!(h.flg_sfr)) )
 	      {
 		continue;
-	      } 
+	      }
 	    BLOCK
 	      fwrite(&sph[i][0], sizeof(float), ngas, fp);
 	    BLOCK
@@ -883,7 +883,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	  {
 	    for ( j = 0; j < 4; j++)
 	      {
-		if (part[stars_start + i - ngas ].sd == NULL) 
+		if (part[stars_start + i - ngas ].sd == NULL)
 		  {
 		    printf("NULL\n");fflush(stdout);
 		    exit(0);
@@ -928,9 +928,9 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	blocksize= (ngas + nstars) * sizeof(float);
 	BLOCK
 	  fwrite(&gsdum[0], sizeof(float), (ngas+nstars), fp);
-	BLOCK 
+	BLOCK
 	  free(gsdum);
-	
+
 #endif
 
 
@@ -956,7 +956,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
       int start= h.npart[0] + h.npart[1] + h.npart[2] + h.npart[3];
       if (part[start].sd !=NULL)
 	{
-	  int *let=(int  *)malloc(sizeof(int)*nstars);	  
+	  int *let=(int  *)malloc(sizeof(int)*nstars);
 	  for (i=0; i<nstars; i++)
 	    {
 	      let[i]=part[i + start].sd->let;
@@ -966,7 +966,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
 	    fwrite(let, sizeof(int), nstars, fp);
 	  BLOCK
 	    free(let);
-	  
+
 	  float *initialmass=(float  *)malloc(sizeof(float)*nstars);
 	  for (i=0; i<nstars; i++)
 	    {
@@ -1002,7 +1002,7 @@ unsigned int writegadget_part(char *filename, struct header h, struct gadpart *p
     }
 #endif //METALS
 
-  /* BH data should be written here, temporarily skipped */	
+  /* BH data should be written here, temporarily skipped */
   if (h.npart[5])
     {
       for ( i = 0; i < 4; i++ )
@@ -1063,14 +1063,14 @@ unsigned int readgadget_novel(char *filename, struct header *h, fltarr **p, int 
   fp=fopen(filename,"r");
   if (fp==NULL) return 0;
   SKIP;
-  fread(h,sizeof(struct header),1,fp);            
+  fread(h,sizeof(struct header),1,fp);
   SKIP2;
   if (blocksize!=blocksize2) return 0;
   for (i=0; i<6; i++) {numpart+=h->npart[i]; if ((h->npart[i]!=0) && (h->massarr[i]==0)) b+=h->npart[i];}
-  pos=(fltarr *)malloc(sizeof(fltarr)*numpart); 
+  pos=(fltarr *)malloc(sizeof(fltarr)*numpart);
   if (b) mass=(float  *)malloc(sizeof(float)*b);
   id=  (int    *)malloc(sizeof(int)*numpart);
-  SKIP;                                                
+  SKIP;
    if (!fread(&pos[0],sizeof(fltarr),numpart,fp)) return 0;
   SKIP2;
   if (blocksize!=blocksize2) return 0;
@@ -1108,12 +1108,12 @@ unsigned int readgadget_sph(char *filename, struct header *h, fltarr **p, fltarr
   fp=fopen(filename,"r");
   if (fp==NULL) return 0;
   SKIP;
-  fread(h,sizeof(struct header),1,fp);            
+  fread(h,sizeof(struct header),1,fp);
   SKIP2;
   if (blocksize!=blocksize2) return 0;
   for (i=0; i<6; i++) {numpart+=h->npart[i]; if ((h->npart[i]!=0) && (h->massarr[i]==0)) noma+=h->npart[i];}
-  pos=(fltarr *)malloc(sizeof(fltarr)*numpart); 
-  vel=(fltarr *)malloc(sizeof(fltarr)*numpart); 
+  pos=(fltarr *)malloc(sizeof(fltarr)*numpart);
+  vel=(fltarr *)malloc(sizeof(fltarr)*numpart);
   if (noma) mass=(float  *)malloc(sizeof(float)*noma);
   id=  (int    *)malloc(sizeof(int)*numpart);
   for (i=0; i<6; i++)
@@ -1123,7 +1123,7 @@ unsigned int readgadget_sph(char *filename, struct header *h, fltarr **p, fltarr
 
   stellarage =(float  *)malloc(sizeof(float)*h->npart[4]);
 
-  SKIP;                                                
+  SKIP;
    if (!fread(&pos[0],sizeof(fltarr),numpart,fp)) return 0;
   SKIP2;
   if (blocksize!=blocksize2) return 0;
@@ -1282,8 +1282,8 @@ int gadsearch(gadpart_dist *data, double toFind, int start, int end)
       {
 	//	printf("TEST\n");fflush(stdout);
 	if (data[mid].dist!=data[mid].dist) return -1;
-	mid = (int) (start + (end - start)/2); 
-	if (data[mid].dist== toFind) 
+	mid = (int) (start + (end - start)/2);
+	if (data[mid].dist== toFind)
 	  {
 	    location=mid;
 	    break;
@@ -1305,7 +1305,7 @@ double log_fit (double t, double *p)
   return ( p[0] + p[1] * log10(t) );
 }
 
-void printout ( int n_par, double* par, int m_dat, double* fvec, 
+void printout ( int n_par, double* par, int m_dat, double* fvec,
                        void *data, int iflag, int iter, int nfev )
          {
            // dummy function to catch fitting output
@@ -1333,7 +1333,7 @@ double nfwfit(double *par, gadpart_dist *part, int cnt, double rv, double soft, 
   double dr=range/nbins;
 
   while ((dist<rv) && (i<cnt))
-   { 
+   {
      dist=part[i].dist;
      //     int idum=0;
      m= part[i].part.type;
@@ -1372,7 +1372,7 @@ double nfwfit(double *par, gadpart_dist *part, int cnt, double rv, double soft, 
 	 }
 	 k=j+1;
 	 nfun++;
-       } 
+       }
    }
   for (j=0; j<nfun; j++)
    {
@@ -1427,7 +1427,7 @@ double densproffit(double *par, gadpart_dist *part, int cnt, double re, double s
   double dr=range/nbins;
   //  printf("%6g %6g %6g %6g %6g\n", minr, maxr, lminr, lmaxr, dr);
   while ((dist<maxr) && (i<cnt))
-   { 
+   {
      dist=part[i].dist;
      //     int idum=0;
      m= part[i].part.type;
@@ -1436,7 +1436,7 @@ double densproffit(double *par, gadpart_dist *part, int cnt, double re, double s
 	 double d=log10(dist);
 	 //	 j=floor(d/(log10(rv)/nbins));
 	 j=floor((d-lminr)/dr);
-	 if (j>=0)
+	 if ((j>=0) && (j<nbins))
 	   {
 	     err[j]++;
 	     p[j]+=part[i].part.mass;
@@ -1463,7 +1463,7 @@ double densproffit(double *par, gadpart_dist *part, int cnt, double re, double s
 	 }
 	 k=j+1;
 	 nfun++;
-       } 
+       }
    }
   for (j=0; j<nfun; j++)
    {
@@ -1512,7 +1512,7 @@ void simplecenter(gadpart *part, int cnt, double* cm, int use)
   double totmass=0;
   for ( j = 0; j < 3; j++ )
     cm[j] = 0;
- 
+
   for ( i = 0; i < cnt; i++ )
     {
       if (! (( 1 << part[i].type) & use)) continue;
@@ -1521,7 +1521,7 @@ void simplecenter(gadpart *part, int cnt, double* cm, int use)
 	cm[j] += part[i].pos[j] * part[i].mass;
     }
   for ( j = 0; j < 3; j++ )
-    cm[j] /= totmass; 
+    cm[j] /= totmass;
 }
 
 void pcenter(gadpart_dist *part, int cnt, double maxdist,  float* cm, int use)
@@ -1539,7 +1539,7 @@ void pcenter(gadpart_dist *part, int cnt, double maxdist,  float* cm, int use)
 	  if (! (( 1 << part[i].part.type) & use)) continue;
 	  masstot+=part[i].part.mass;
 	  for (j=0; j<3; j++)
-	    cm[j]+=part[i].part.pos[j]*part[i].part.mass;      
+	    cm[j]+=part[i].part.pos[j]*part[i].part.mass;
 	}
       for (j=0; j<3; j++)
 	cm[j]/=masstot;
@@ -1570,7 +1570,7 @@ void pcenter(gadpart_dist *part, int cnt, double maxdist,  float* cm, int use)
 	    }
 	}
       if (masstot)
-	for (j=0; j<3; j++) 
+	for (j=0; j<3; j++)
 	  {
 	    tmpcm[j]/=masstot;
 	    cm[j]=tmpcm[j];
@@ -1602,11 +1602,11 @@ void findcenter(gadpart *part, int cnt, double maxdist, int use)
       masstot+=part[i].mass;
       idlist[count++]=i;
       for (j=0; j<3; j++)
-	cm[j]+=part[i].pos[j]*part[i].mass;      
+	cm[j]+=part[i].pos[j]*part[i].mass;
     }
   for (j=0; j<3; j++)
     cm[j]/=masstot;
-  
+
   int idum;
   do
     {
@@ -1627,7 +1627,7 @@ void findcenter(gadpart *part, int cnt, double maxdist, int use)
 	    }
 	  if (ddum > extend) extend = ddum;
 	}
-      for (j=0; j<3; j++) 
+      for (j=0; j<3; j++)
 	{
 	  tmpcm[j]/=masstot;
 	  cm[j]=tmpcm[j];
@@ -1644,7 +1644,7 @@ void findcenter(gadpart *part, int cnt, double maxdist, int use)
 	  for (k=0; k< count; k++)
 	    {
 	      i = idlist[k];
-	      for (j=0; j<3; j++) 
+	      for (j=0; j<3; j++)
 		{
 		  cvel[j] += part[i].vel[j] * part[i].mass;
 		}
@@ -1679,7 +1679,7 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
 {
   int i,j,k,l, cnt=0;
 
-  int *idlist = (int*) calloc(numpart, sizeof(int)); 
+  int *idlist = (int*) calloc(numpart, sizeof(int));
   if ( rad <= 0 )
     {
       gadpart_dist *wpart =(gadpart_dist*)  malloc(numpart * sizeof(gadpart_dist));
@@ -1687,7 +1687,7 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
       double massdum = 0;
       for ( i = 0; i < numpart; i++ )
 	{
-	  if (! (( 1 << part[i].type) & use)) 
+	  if (! (( 1 << part[i].type) & use))
 	    {
 	      continue;
 	    }
@@ -1721,7 +1721,7 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
   gsl_vector *eval = gsl_vector_alloc (3);
   gsl_matrix *evec = gsl_matrix_alloc (3, 3);
   gsl_matrix *LU = gsl_matrix_alloc (3, 3);
-  gsl_matrix *inv  = gsl_matrix_alloc (3, 3);     
+  gsl_matrix *inv  = gsl_matrix_alloc (3, 3);
   gsl_eigen_symmv_workspace * w =  gsl_eigen_symmv_alloc (3);
   gsl_matrix *rotation = gsl_matrix_alloc (3, 3);
   *rotmat = rotation;
@@ -1729,14 +1729,14 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
   gsl_matrix *resultmatrix = gsl_matrix_alloc (3, 3);
   gsl_matrix_set_zero(I);
 
-     
+
   do
     {
       double dist;
       s_old=s;
       gsl_matrix_set_zero(I);
       for (l=0; l < cnt; l++)
-	{     
+	{
 	  k=idlist[l];
 	  for (i=0; i < 3; i++)
 	    for (j=i; j < 3; j++)
@@ -1744,7 +1744,7 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
 		ddum =part[k].pos[i] * part[k].pos[j];
 		dist =SQR(part[k].pos[0])+SQR(part[k].pos[1]/q)+SQR(part[k].pos[2]/s);
 		ddum/= dist;
-		if (sqrt(dist)<rad) 
+		if (sqrt(dist)<rad)
 		  {
 		    gsl_matrix_set(I,i,j, gsl_matrix_get(I,i,j)+ddum);
 		    if (i!=j) gsl_matrix_set(I,j,i, gsl_matrix_get(I,j,i)+ddum);
@@ -1755,7 +1755,7 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
       gsl_eigen_symmv (I, eval, evec, w);
       gsl_eigen_symmv_sort (eval, evec, GSL_EIGEN_SORT_ABS_DESC);
       gsl_matrix_memcpy(LU, evec);
-     
+
       for (i=0; i < 3; i++)
 	{
 	  double eval_i  = gsl_vector_get (eval, i);
@@ -1763,22 +1763,22 @@ void rotategalaxy(gadpart *part, int numpart, double rad, int use, double *res, 
 	  else if (i==1) q=sqrt(eval_i)/ddum;
 	  else           s=sqrt(eval_i)/ddum;
 	}
-    
+
       gsl_permutation *perm = gsl_permutation_alloc (3);
       int sign;
 
       gsl_linalg_LU_decomp (LU, perm, &sign);
       gsl_linalg_LU_invert (LU, perm, inv);
-  
+
 
       gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,
 		      1.0, inv, rotation,
 		      0.0, resultmatrix);
       gsl_matrix_memcpy (rotation, resultmatrix);
 
-      //Rotate Particles 
+      //Rotate Particles
       gsl_vector *oldpos = gsl_vector_alloc (3);
-      gsl_vector *newpos = gsl_vector_alloc (3);  
+      gsl_vector *newpos = gsl_vector_alloc (3);
       gsl_vector *oldvel = gsl_vector_alloc (3);
       gsl_vector *newvel = gsl_vector_alloc (3);
       ddum=0;
@@ -1827,7 +1827,7 @@ void simplecm(gadpart ** part, int cnt, float * cm)
   cm[0]=0;
   cm[1]=0;
   cm[2]=0;
-  
+
   for ( i = 0; i < cnt; i++)
     {
       for ( j = 0; j < 3; j++) cm[j] += part[i] -> pos[j];
@@ -1864,7 +1864,7 @@ double xoffset(gadpart_dist* pd, int cnt, float rvir, float* center)
   double cm[3] = {0., 0., 0.};
   for ( j = 0; j < 3; j++ )
     cm[j] = 0;
- 
+
   for ( i = 0; i < cnt; i++ )
     {
       if (pd[i].dist > rvir) continue;
@@ -1873,7 +1873,7 @@ double xoffset(gadpart_dist* pd, int cnt, float rvir, float* center)
       cm[j] += pd[i].part.pos[j] * pd[i].part.mass;
     }
   for ( j = 0; j < 3; j++ )
-    cm[j] /= totmass; 
+    cm[j] /= totmass;
 
   double dist;
   float fcm[3];
@@ -1898,11 +1898,11 @@ double temperature(const gadpart part)
   const double vel_in_cm_per_s=1e5;
   const double time_in_s= length_cm / vel_in_cm_per_s;
   const double energy_cgs = mass_in_g * pow(length_cm, 2) / pow(time_in_s, 2);
-  const double mu = (1 + 4 * yhelium) / (1 + yhelium + part.sph->nelec);    
-  
+  const double mu = (1 + 4 * yhelium) / (1 + yhelium + part.sph->nelec);
+
   double temp = gamma_minus_1 / boltzmann * part.sph->u * protonm * mu;
   temp *= energy_cgs / mass_in_g;
-  
+
   return temp;
 }
 #endif //NOGAS
@@ -1927,8 +1927,8 @@ double galage(double z, double omegam, double omegal, double h)
     {
       double tmp1 = 1.0/h0 * omegam/(2.0*pow((1.0-omegam),1.5));
       double tmp2 = 2.0*(1.0-omegam)/(omegam*(1.0+z))+1.0;
-      double tmp3 = 2.0 * 
-	log(sqrt((tmp2+1.0)/2.0) 
+      double tmp3 = 2.0 *
+	log(sqrt((tmp2+1.0)/2.0)
 	    + sqrt((tmp2-1.0)/2.0));
 
       tsec = tmp1 * ( sqrt(pow(tmp2,2)-1.0) - tmp3 );
@@ -1960,16 +1960,16 @@ double z2a(double z)
 #ifndef NOVEL
 void rotatepart(gadpart *part, int numpart, const gsl_matrix *rotmat)
 {
-  int i,j,k; 
+  int i,j,k;
   gsl_vector *oldpos = gsl_vector_alloc (3);
-  gsl_vector *newpos = gsl_vector_alloc (3);  
+  gsl_vector *newpos = gsl_vector_alloc (3);
   gsl_vector *oldvel = gsl_vector_alloc (3);
   gsl_vector *newvel = gsl_vector_alloc (3);
-  for (k=0; k < numpart; k++)	
+  for (k=0; k < numpart; k++)
     {
       for (i=0; i<3; i++)
 	{
-	  gsl_vector_set(oldpos, i, part[k].pos[i]);          
+	  gsl_vector_set(oldpos, i, part[k].pos[i]);
 	  gsl_vector_set(oldvel, i, part[k].vel[i]);
 	}
       gsl_blas_dgemv( CblasNoTrans, 1.0, rotmat, oldpos, 0.0, newpos);
@@ -1980,7 +1980,7 @@ void rotatepart(gadpart *part, int numpart, const gsl_matrix *rotmat)
 	  part[k].pos[i]=gsl_vector_get(newpos, i);
 	  part[k].vel[i]=gsl_vector_get(newvel, i);
 	}
-      
+
     }
 
 }
@@ -2045,7 +2045,7 @@ double radvel(fltarr vel, fltarr rad)
   double vdotr = vel[0] * rad[0] + vel[1] * rad[1] + vel[2] * rad[2];
   //  double angle = acos(vdotr / (velnorm * radnorm));
   return (vdotr / radnorm);
-  
+
 }
 
 
